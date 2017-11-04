@@ -6,6 +6,7 @@
 #include "vulkan/MemoryManager.hpp"
 #include "lego/BrickModel.hpp"
 #include "lego/TriangleModel.hpp"
+#include "engine/Engine.hpp"
 
 using namespace engine;
 using namespace vulkan;
@@ -13,6 +14,7 @@ using namespace OVR;
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+
 
     lego::BrickModel<ModelData> brick{4, 2, 3};
     brick.init();
@@ -24,6 +26,10 @@ int main() {
     Camera camera;
     Scene<ModelData, ObjectData> scene(camera);
     Renderer renderer;
+
+    engine::Engine<ModelData, ObjectData> engine{renderer};
+    engine.init();
+
     renderer.init();
     renderer.loadModel(brick);
     renderer.loadModel(triangle);
@@ -31,7 +37,7 @@ int main() {
 
     scene.objects.push_back(object);
 
-    while(true) {
+    for(int i = 0; i < 100; i++) {
         renderer.render(scene);
     }
 }

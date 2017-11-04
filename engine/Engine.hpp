@@ -6,9 +6,19 @@
 #define LEGO_ENGINE_HPP
 
 
-class Engine {
+namespace engine {
+    template<class ModelData, class ObjectData>
+    class RenderingEngine;
 
-};
-
+    template<class ModelData, class ObjectData>
+    class Engine {
+        RenderingEngine<ModelData, ObjectData> &renderingEngine;
+    public:
+        explicit Engine(RenderingEngine<ModelData, ObjectData> &renderingEngine)
+                : renderingEngine(renderingEngine) {}
+        void init();
+        virtual ~Engine() = default;
+    };
+}
 
 #endif //LEGO_ENGINE_HPP

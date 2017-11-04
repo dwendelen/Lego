@@ -19,7 +19,7 @@ if (Vulkan_FOUND)
 
     include_directories(${CORE_INC} ${Vulkan_INCLUDE_DIR})
 
-    add_executable(LegoV ${CORE_SRC} mainVulkan.cpp vulkan/Renderer.cpp vulkan/Renderer.hpp vulkan/vulkanExt.hpp vulkan/MemoryManager.cpp vulkan/MemoryManager.hpp vulkan/ObjectData.hpp vulkan/Shader.cpp vulkan/Shader.hpp vulkan/Context.cpp vulkan/Context.hpp vulkan/RenderPass.cpp vulkan/RenderPass.hpp vulkan/SimpleRenderPass.cpp vulkan/SimpleRenderPass.hpp)
+    add_executable(LegoV ${CORE_SRC} mainVulkan.cpp vulkan/Renderer.cpp vulkan/Renderer.hpp vulkan/vulkanExt.hpp vulkan/MemoryManager.cpp vulkan/MemoryManager.hpp vulkan/ObjectData.hpp vulkan/Shader.cpp vulkan/Shader.hpp vulkan/Context.cpp vulkan/Context.hpp vulkan/RenderPass.cpp vulkan/RenderPass.hpp vulkan/SimpleRenderPass.cpp vulkan/SimpleRenderPass.hpp vulkan/Display.cpp vulkan/Display.hpp)
 
     target_link_libraries(LegoV ${CORE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
 else(Vulkan_FOUND)

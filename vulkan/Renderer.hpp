@@ -17,23 +17,23 @@
 #include "Context.hpp"
 #include "RenderPass.hpp"
 #include "SimpleRenderPass.hpp"
+#include "Display.hpp"
 
 
 namespace vulkan {
     class Renderer : public engine::RenderingEngine<ModelData, ObjectData> {
     private:
-        SDL_Window *window;
+        //SDL_Window *window;
         std::unique_ptr<Context> context;
+        std::unique_ptr<Display> display;
         vk::Queue queue;
-        vk::SwapchainKHR swapChain;
+        //vk::SwapchainKHR swapChain;
         vk::CommandPool commandPool;
         //vk::CommandBuffer commandBuffer;
 
         std::unique_ptr<Shader> vertexShader;
         std::unique_ptr<Shader> fragmentShader;
-
-        std::unique_ptr</*Simple*/RenderPass> renderPass;
-
+        std::unique_ptr<RenderPass> renderPass;
         std::unique_ptr<MemoryManager> memoryManager;
 
         vk::DescriptorPool descriptorPool;
@@ -42,6 +42,9 @@ namespace vulkan {
         std::vector<vk::ImageView> imageViews;
         vk::ImageView depthView;
         vk::Image depthBuffer;
+
+        vk::Semaphore frameBufferReady;
+        vk::Semaphore renderingDone;
 
     public:
         void init();

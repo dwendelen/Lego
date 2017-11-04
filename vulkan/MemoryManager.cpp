@@ -235,12 +235,27 @@ vulkan::MemoryManager::~MemoryManager() {
         device.freeMemory(staticMemory);
     }
 
+    if(pvBuffer) {
+        device.destroyBuffer(pvBuffer);
+    }
+
+    if(pvMemory) {
+        device.freeMemory(pvMemory);
+    }
+
     if(modelBuffer) {
         device.destroyBuffer(modelBuffer);
     }
     
     if(modelMemory) {
         device.freeMemory(modelMemory);
+    }
+
+    if(objectBuffer) {
+        device.destroyBuffer(objectBuffer);
+    }
+    if(objectMemory) {
+        device.freeMemory(objectMemory);
     }
 }
 

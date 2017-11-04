@@ -29,14 +29,6 @@ bool hasFlags(T actual, T expected) {
 
 
 void vulkan::Renderer::init() {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
-        throw runtime_error("Could not init SDL: " + string(SDL_GetError()));
-    }
-
-    window = SDL_CreateWindow("Vulkan window", 100, 100, 800, 600, 0);
-    if (window == nullptr) {
-        throw runtime_error("Could not create window:" + string(SDL_GetError()));
-    }
 
     vector<char const *> instanceExtensions{
 #ifdef VK_USE_PLATFORM_XLIB_KHR
@@ -81,67 +73,14 @@ void vulkan::Renderer::init() {
     memoryManager->init();
 
 
-    SDL_SysWMinfo windowInfo{};
-    SDL_VERSION(&windowInfo.version);
-    SDL_GetWindowWMInfo(window, &windowInfo);
-#ifdef VK_USE_PLATFORM_XLIB_KHR
-    if (windowInfo.subsystem != SDL_SYSWM_X11) {
-        throw runtime_error("Not Xlib");
-    }
-
-    XlibSurfaceCreateInfoKHR xlibInfo;
-    xlibInfo.dpy = windowInfo.info.x11.display;
-    xlibInfo.window = windowInfo.info.x11.window;
-
-    SurfaceKHR surface = instance.createXlibSurfaceKHR(xlibInfo);
-    //TODO FIELD & DESTRUCTION
-
-#endif
-#ifdef VK_USE_PLATFORM_XCB_KHR
-    if(windowInfo.subsystem != SDL_SYSWM_X11) {
-        throw runtime_error("Not Xlib");
-    }
-
-    XcbSurfaceCreateInfoKHR xcbInfo;
-    xcbInfo.connection = XGetXCBConnection(windowInfo.info.x11.display);
-    xcbInfo.window = windowInfo.info.x11.window;
-
-    SurfaceKHR surface = instance.createXcbSurfaceKHR(xcbInfo);
-        //TODO FIELD & DESTRUCTION
-
-#endif
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-    if(windowInfo.subsystem != SDL_SYSWM_WINDOWS) {
-        throw runtime_error("Not Windows");
-    }
-
-    Win32SurfaceCreateInfoKHR winInfo;
-    winInfo.hwnd = windowInfo.info.win.window;
-    winInfo.hinstance = GetModuleHandle(NULL);
-    SurfaceKHR surface = instance.createWin32SurfaceKHR(winInfo);
-        //TODO FIELD & DESTRUCTION
-#endif
-
+    display = unique_ptr<Display>(new Display(instance, device, queue));
+    display->init();
     cout << "TODO CHECK CAPABILITIES" << endl;
 
-    SwapchainCreateInfoKHR swapCreateInfo;
-    swapCreateInfo.surface = surface;
-    swapCreateInfo.minImageCount = 3;
-    swapCreateInfo.imageFormat = Format::eB8G8R8A8Srgb;
-    swapCreateInfo.imageColorSpace = ColorSpaceKHR::eSrgbNonlinear;
-    swapCreateInfo.imageExtent = Extent2D{800, 600};
-    swapCreateInfo.imageArrayLayers = 1;
-    swapCreateInfo.imageUsage = ImageUsageFlagBits::eColorAttachment;
-    swapCreateInfo.imageSharingMode = SharingMode::eExclusive;
-    swapCreateInfo.preTransform = SurfaceTransformFlagBitsKHR::eIdentity;
-    swapCreateInfo.compositeAlpha = CompositeAlphaFlagBitsKHR::ePostMultiplied;
-    swapCreateInfo.clipped = VK_TRUE;
-    swapCreateInfo.presentMode = PresentModeKHR::eMailbox;
 
-    swapChain = device.createSwapchainKHR(swapCreateInfo);
 
     //TODO FIELD & DESTRUCTION
-    vector<Image> images = device.getSwapchainImagesKHR(swapChain);
+
 
     ImageCreateInfo depthInfo;
     depthInfo.imageType = ImageType::e2D;
@@ -181,7 +120,7 @@ void vulkan::Renderer::init() {
 
     depthView = device.createImageView(depthimageViewCreateInfo);
 
-    for (auto image: images) {
+    for (auto image: display->getImages()) {
         ImageViewCreateInfo imageViewCreateInfo;
         imageViewCreateInfo.image = image;
         imageViewCreateInfo.viewType = ImageViewType::e2D;
@@ -211,6 +150,8 @@ void vulkan::Renderer::init() {
         this->frameBuffers.push_back(framebuffer);
     }
 
+    frameBufferReady = device.createSemaphore({});
+    renderingDone = device.createSemaphore({});
 
     vector<DescriptorPoolSize> descriptorPoolSizes{
             {DescriptorType::eUniformBufferDynamic, 1},
@@ -242,16 +183,8 @@ void Renderer::createOpagePipeline() {
                     fragmentShader->getShaderModule()
             )
     );
-    /*renderPass = unique_ptr<SimpleRenderPass>(
-            new SimpleRenderPass(
-                    device,
-                    vertexShader->getShaderModule(),
-                    fragmentShader->getShaderModule()
-            )
-    );*/
+
     renderPass->init();
-
-
 }
 
 void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectData> &scene) {
@@ -323,10 +256,8 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     clearValues[0].depthStencil = ClearDepthStencilValue{1.0f, 0};
     clearValues[1].color = ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.4f, 1.0f});
 
-    Semaphore imageReady = device.createSemaphore({});
 
-    ResultValue<uint32_t> imageIdxx = device.acquireNextImageKHR(swapChain, 30ul * 1000 * 1000 * 1000, imageReady, {});
-    uint32_t imageIdx = imageIdxx.value;
+    uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
 
     RenderPassBeginInfo renderPassBeginInfo;
     renderPassBeginInfo.renderPass = renderPass->getRenderPass();
@@ -362,40 +293,27 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     commandBuffer.endRenderPass();
     commandBuffer.end();
 
-    Semaphore frameDoneSema = device.createSemaphore({});
-
     PipelineStageFlags waitStage = PipelineStageFlagBits::eTopOfPipe;
 
     SubmitInfo submitInfo;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &imageReady;
+    submitInfo.pWaitSemaphores = &frameBufferReady;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &frameDoneSema;
+    submitInfo.pSignalSemaphores = &renderingDone;
     submitInfo.pWaitDstStageMask = &waitStage;
 
 
     queue.submit(submitInfo, nullptr);
 
-    PresentInfoKHR presentInfoKHR;
-    presentInfoKHR.waitSemaphoreCount = 1;
-    presentInfoKHR.pWaitSemaphores = &frameDoneSema;
-    presentInfoKHR.swapchainCount = 1;
-    presentInfoKHR.pSwapchains = &swapChain;
-    presentInfoKHR.pImageIndices = &imageIdx;
-
-    queue.presentKHR(presentInfoKHR);
+    display->display(renderingDone, imageIdx);
     device.waitIdle();
 SDL_Delay(10);
     return;
 }
 
 vulkan::Renderer::~Renderer() {
-    if (window != nullptr) {
-        SDL_DestroyWindow(window);
-    }
-
     Device device = context->getDevice();
 
     if (device) {
@@ -412,6 +330,9 @@ vulkan::Renderer::~Renderer() {
     if (depthView) {
         device.destroyImageView(depthView);
     }
+    if(depthBuffer) {
+        device.destroyImage(depthBuffer);
+    }
 
     if (descriptorPool) {
         device.destroyDescriptorPool(descriptorPool);
@@ -426,6 +347,14 @@ vulkan::Renderer::~Renderer() {
         device.destroyCommandPool(commandPool);
     }
 
+    if(renderingDone) {
+        device.destroySemaphore(renderingDone);
+    }
+    if(frameBufferReady) {
+        device.destroySemaphore(frameBufferReady);
+    }
+
+    display.reset();
     memoryManager.reset();
     context.reset();
 }
