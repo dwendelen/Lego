@@ -18,6 +18,7 @@
 #include "RenderPass.hpp"
 #include "SimpleRenderPass.hpp"
 #include "Display.hpp"
+#include "TransparentRenderPass.hpp"
 
 
 namespace vulkan {
@@ -34,6 +35,7 @@ namespace vulkan {
         std::unique_ptr<Shader> vertexShader;
         std::unique_ptr<Shader> fragmentShader;
         std::unique_ptr<RenderPass> renderPass;
+        std::unique_ptr<TransparentRenderPass> transparentRenderPass;
         std::unique_ptr<MemoryManager> memoryManager;
 
         vk::DescriptorPool descriptorPool;
@@ -45,7 +47,7 @@ namespace vulkan {
 
         vk::Semaphore frameBufferReady;
         vk::Semaphore renderingDone;
-
+        vk::Fence renderingDoneFence;
     public:
         void init();
         void render(engine::Scene<ModelData, ObjectData> &scene) override;

@@ -22,6 +22,7 @@ int main() {
 
     auto orientation = Quatf(0.0f, 0.0f, 0.0f, 1.0f);
     engine::Object<ModelData, ObjectData> object {brick, Vector3f{0.0f,0.0f,-0.2f}, orientation, Vector4f{1.0f,1.0f,1.0f, 1.0f}};
+    engine::Object<ModelData, ObjectData> transparentBrick {brick, Vector3f{0.0f,0.0f,-0.2f}, orientation, Vector4f{1.0f,1.0f,1.0f, 0.5f}};
 
     Camera camera;
     Scene<ModelData, ObjectData> scene(camera);
@@ -33,11 +34,11 @@ int main() {
     renderer.init();
     renderer.loadModel(brick);
     renderer.loadModel(triangle);
-    renderer.loadObject(object);
+    renderer.loadObject(transparentBrick);
 
-    scene.objects.push_back(object);
+    scene.objects.push_back(transparentBrick);
 
-    for(int i = 0; i < 100; i++) {
+    while(true) {//for(int i = 0; i < 100; i++) {
         renderer.render(scene);
     }
 }

@@ -14,6 +14,7 @@
 #ifdef __LINUX__
 
 #include <X11/Xlib-xcb.h>
+#include <chrono>
 
 #endif
 
@@ -101,7 +102,7 @@ void vulkan::Renderer::init() {
     //TODO FIELD & DESTRUCTION
     depthBuffer = device.createImage(depthInfo);
 
-    vector<Image> imagesToAlloc/* = images*/;
+    vector<Image> imagesToAlloc;
     imagesToAlloc.push_back(depthBuffer);
 
     memoryManager->allocateStatic(imagesToAlloc);
@@ -139,7 +140,7 @@ void vulkan::Renderer::init() {
         vector<ImageView> attachments{depthView, imageView};
 
         FramebufferCreateInfo framebufferCreateInfo;
-        framebufferCreateInfo.renderPass = renderPass->getRenderPass();
+        framebufferCreateInfo.renderPass = transparentRenderPass->getRenderPass();
         framebufferCreateInfo.attachmentCount = attachments.size();
         framebufferCreateInfo.pAttachments = attachments.data();
         framebufferCreateInfo.width = 800;
@@ -152,6 +153,7 @@ void vulkan::Renderer::init() {
 
     frameBufferReady = device.createSemaphore({});
     renderingDone = device.createSemaphore({});
+    renderingDoneFence = device.createFence({});
 
     vector<DescriptorPoolSize> descriptorPoolSizes{
             {DescriptorType::eUniformBufferDynamic, 1},
@@ -185,14 +187,22 @@ void Renderer::createOpagePipeline() {
     );
 
     renderPass->init();
+
+    transparentRenderPass = unique_ptr<TransparentRenderPass>(
+            new TransparentRenderPass(
+                    device,
+                    vertexShader->getShaderModule(),
+                    fragmentShader->getShaderModule()
+            )
+    );
+    transparentRenderPass->init();
 }
 
 void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectData> &scene) {
     Device device = context->getDevice();
 
-    device.waitIdle();
+    uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
 
-    cout << "Render start" << endl;
     device.resetCommandPool(commandPool, {});
     device.resetDescriptorPool(descriptorPool);
 
@@ -203,7 +213,7 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
 
     CommandBuffer commandBuffer = device.allocateCommandBuffers(commandBufferInfo)[0];
 
-    vector<DescriptorSetLayout> descriptorSetLayouts {renderPass->getSetLayout0(), renderPass->getSetLayout1()};
+    vector<DescriptorSetLayout> descriptorSetLayouts {transparentRenderPass->getSetLayout0(), transparentRenderPass->getSetLayout1()};
 
     DescriptorSetAllocateInfo descriptorSetAllocateInfo;
     descriptorSetAllocateInfo.descriptorPool = descriptorPool;
@@ -257,10 +267,8 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     clearValues[1].color = ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.4f, 1.0f});
 
 
-    uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
-
     RenderPassBeginInfo renderPassBeginInfo;
-    renderPassBeginInfo.renderPass = renderPass->getRenderPass();
+    renderPassBeginInfo.renderPass = transparentRenderPass->getRenderPass();
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
     renderPassBeginInfo.renderArea = Rect2D{{0,   0},
@@ -269,19 +277,19 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
 
 
     commandBuffer.beginRenderPass(renderPassBeginInfo, SubpassContents::eInline);
-    commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, renderPass->getPipelineLayout(), 1,
+    commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 1,
                                      {descriptorSets[1]}, {});
-    commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, renderPass->getPipeline());
-
 
     Buffer modelBuffer = memoryManager->getModelBuffer();
+
+    commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline0());
 
     for (auto object: scene.objects) {
         DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
         DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
         DeviceSize offsetUniform = object.objectData.dataOffset;
 
-        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, renderPass->getPipelineLayout(), 0,
+        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                          {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
         commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
         commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
@@ -289,6 +297,24 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
         uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
         commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
     }
+
+    commandBuffer.nextSubpass(SubpassContents::eInline);
+    commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
+
+    for (auto object: scene.objects) {
+        DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
+        DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
+        DeviceSize offsetUniform = object.objectData.dataOffset;
+
+        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
+                                         {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
+        commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
+        commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
+
+        uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
+        commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
+    }
+
 
     commandBuffer.endRenderPass();
     commandBuffer.end();
@@ -305,12 +331,13 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     submitInfo.pWaitDstStageMask = &waitStage;
 
 
-    queue.submit(submitInfo, nullptr);
+    device.resetFences(renderingDoneFence);
+    queue.submit(submitInfo, renderingDoneFence);
 
     display->display(renderingDone, imageIdx);
-    device.waitIdle();
-SDL_Delay(10);
-    return;
+
+
+    device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
 }
 
 vulkan::Renderer::~Renderer() {
@@ -340,6 +367,7 @@ vulkan::Renderer::~Renderer() {
 
 
     renderPass.reset();
+    transparentRenderPass.reset();
     vertexShader.reset();
     fragmentShader.reset();
 
@@ -352,6 +380,9 @@ vulkan::Renderer::~Renderer() {
     }
     if(frameBufferReady) {
         device.destroySemaphore(frameBufferReady);
+    }
+    if(renderingDoneFence) {
+        device.destroyFence(renderingDoneFence);
     }
 
     display.reset();
