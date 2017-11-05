@@ -23,6 +23,7 @@ namespace vulkan {
         void createDebugLogging();
         void selectPhysicalDevice();
         void selectQueueFamilyIndex();
+        void checkFormats();
 
     public:
         Context(std::vector<char const *> layers,
@@ -52,6 +53,7 @@ namespace vulkan {
         void load();
 
         virtual ~Context();
+
     };
 }
 

@@ -74,13 +74,10 @@ void vulkan::Renderer::init() {
     memoryManager->init();
 
 
-    display = unique_ptr<Display>(new Display(instance, device, queue));
+    display = unique_ptr<Display>(new Display(instance, physical, device, queue));
     display->init();
     cout << "TODO CHECK CAPABILITIES" << endl;
 
-
-
-    //TODO FIELD & DESTRUCTION
 
 
     ImageCreateInfo depthInfo;
@@ -99,7 +96,6 @@ void vulkan::Renderer::init() {
     depthInfo.pQueueFamilyIndices = nullptr;
     depthInfo.initialLayout = ImageLayout::eUndefined;
 
-    //TODO FIELD & DESTRUCTION
     depthBuffer = device.createImage(depthInfo);
 
     vector<Image> imagesToAlloc;
@@ -173,20 +169,6 @@ void vulkan::Renderer::init() {
 
 void Renderer::createOpagePipeline() {
     Device device = context->getDevice();
-
-    cout << "TODO validate D32 as depth buffer" << endl;
-    cout << "TODO validate D32 as color buffer and swap chain" << endl;
-    cout << "TODO validate VK_FORMAT_R32G32B32_SFLOAT as shader input" << endl;
-
-    renderPass = unique_ptr<RenderPass>(
-            new RenderPass(
-                    device,
-                    vertexShader->getShaderModule(),
-                    fragmentShader->getShaderModule()
-            )
-    );
-
-    renderPass->init();
 
     transparentRenderPass = unique_ptr<TransparentRenderPass>(
             new TransparentRenderPass(
@@ -338,7 +320,6 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
 
     display->display(renderingDone, imageIdx);
 
-
     device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
 }
 
@@ -367,8 +348,6 @@ vulkan::Renderer::~Renderer() {
         device.destroyDescriptorPool(descriptorPool);
     }
 
-
-    renderPass.reset();
     transparentRenderPass.reset();
     vertexShader.reset();
     fragmentShader.reset();

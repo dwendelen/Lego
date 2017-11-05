@@ -24,17 +24,13 @@
 namespace vulkan {
     class Renderer : public engine::RenderingEngine<ModelData, ObjectData> {
     private:
-        //SDL_Window *window;
         std::unique_ptr<Context> context;
         std::unique_ptr<Display> display;
         vk::Queue queue;
-        //vk::SwapchainKHR swapChain;
         vk::CommandPool commandPool;
-        //vk::CommandBuffer commandBuffer;
 
         std::unique_ptr<Shader> vertexShader;
         std::unique_ptr<Shader> fragmentShader;
-        std::unique_ptr<RenderPass> renderPass;
         std::unique_ptr<TransparentRenderPass> transparentRenderPass;
         std::unique_ptr<MemoryManager> memoryManager;
 

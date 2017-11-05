@@ -24,7 +24,7 @@ int main() {
 
     auto orientation = Quatf(0.0f, 0.0f, 0.0f, 1.0f);
     engine::Object<ModelData, ObjectData> object1 {brick, Vector3f{-0.032f,-0.2f,-0.2f}, orientation, Vector4f{1.0f,1.0f,1.0f, 1.0f}};
-    engine::Object<ModelData, ObjectData> object2 {brick2, Vector3f{0.0f,-0.2f,-0.216f}, orientation, Vector4f{1.0f,1.0f,1.0f, 1.0f}};
+    engine::Object<ModelData, ObjectData> object2 {brick2, Vector3f{0.0f,-0.2f,-0.216f}, orientation, Vector4f{1.0f,0.0f,0.0f, 1.0f}};
     engine::Object<ModelData, ObjectData> transparentBrick {brick, Vector3f{0.0f,-0.2f,-0.2f}, orientation, Vector4f{1.0f,1.0f,1.0f, 0.5f}};
 
     Camera camera;

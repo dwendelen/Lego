@@ -16,6 +16,8 @@ using namespace vk;
 
 void vulkan::Display::init() {
     window = SDL_CreateWindow("Vulkan window", 100, 100, 800, 600, 0);
+    //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
     if (window == nullptr) {
         throw runtime_error("Could not create window:" + string(SDL_GetError()));
     }
@@ -58,9 +60,11 @@ void vulkan::Display::init() {
     surface = instance.createWin32SurfaceKHR(winInfo);
 #endif
 
+    checkSurface();
+
     SwapchainCreateInfoKHR swapCreateInfo;
     swapCreateInfo.surface = surface;
-    swapCreateInfo.minImageCount = 3;
+    swapCreateInfo.minImageCount = 2;
     swapCreateInfo.imageFormat = Format::eB8G8R8A8Srgb;
     swapCreateInfo.imageColorSpace = ColorSpaceKHR::eSrgbNonlinear;
     swapCreateInfo.imageExtent = Extent2D{800, 600};
@@ -70,9 +74,41 @@ void vulkan::Display::init() {
     swapCreateInfo.preTransform = SurfaceTransformFlagBitsKHR::eIdentity;
     swapCreateInfo.compositeAlpha = CompositeAlphaFlagBitsKHR::ePostMultiplied;
     swapCreateInfo.clipped = VK_TRUE;
-    swapCreateInfo.presentMode = PresentModeKHR::eMailbox;
+    swapCreateInfo.presentMode = PresentModeKHR::eFifoRelaxed;
 
     swapChain = device.createSwapchainKHR(swapCreateInfo);
+}
+
+void checkFormat(vector<SurfaceFormatKHR> formats) {
+    for(auto format: formats) {
+        if(format.format == Format::eB8G8R8A8Srgb && format.colorSpace == ColorSpaceKHR::eSrgbNonlinear) {
+            return;
+        }
+    }
+    
+    throw runtime_error("Surface does not support format");
+}
+
+void checkPresentationMode(vector<PresentModeKHR > presentationModes) {
+    for(auto presentationMode: presentationModes) {
+        if(presentationMode == PresentModeKHR::eFifo) {
+            return;
+        }
+    }
+
+    throw runtime_error("FIFO not supported");
+}
+
+void vulkan::Display::checkSurface() {
+    checkFormat(physical.getSurfaceFormatsKHR(surface));
+    checkPresentationMode(physical.getSurfacePresentModesKHR(surface));
+    SurfaceCapabilitiesKHR capabilities = physical.getSurfaceCapabilitiesKHR(surface);
+    cout << "//TODO: check capabilities";
+    cout << "//TODO: choose a format and store";
+    cout << "//TODO: store width, height and use it";
+    cout << capabilities.currentExtent.width
+         << capabilities.currentExtent.height
+         << endl;
 }
 
 std::vector<vk::Image> vulkan::Display::getImages() {

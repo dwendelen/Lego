@@ -99,6 +99,7 @@ void vulkan::Context::load() {
     selectQueueFamilyIndex();
 
     checkExtensions(deviceExtensions, physical.enumerateDeviceExtensionProperties());
+    checkFormats();
 
     vector<float> queuePriorities = {1.0};
     DeviceQueueCreateInfo queueInfo;
@@ -112,6 +113,23 @@ void vulkan::Context::load() {
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &queueInfo;
     device = physical.createDevice(deviceCreateInfo);
+}
+
+void vulkan::Context::checkFormats() {
+    FormatProperties depthBufferFormat = physical.getFormatProperties(Format::eD32Sfloat);
+    if(!hasFlags(depthBufferFormat.optimalTilingFeatures, FormatFeatureFlags() | FormatFeatureFlagBits::eDepthStencilAttachment)) {
+        throw runtime_error("Depth buffer format not supported");
+    }
+
+    FormatProperties srgbFormat = physical.getFormatProperties(Format::eB8G8R8A8Srgb);
+    if(!hasFlags(srgbFormat.optimalTilingFeatures, FormatFeatureFlags() | FormatFeatureFlagBits::eColorAttachment | FormatFeatureFlagBits::eColorAttachmentBlend)) {
+        throw runtime_error("SRGB not supported");
+    }
+
+    FormatProperties vertexFormat = physical.getFormatProperties(Format::eR32G32B32Sfloat);
+    if(!hasFlags(vertexFormat.bufferFeatures, FormatFeatureFlags() | FormatFeatureFlagBits::eVertexBuffer)) {
+        throw runtime_error("Format for vertex not supported");
+    }
 }
 
 vulkan::Context::~Context() {

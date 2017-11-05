@@ -11,6 +11,7 @@
 namespace vulkan {
     class Display {
         vk::Instance instance;
+        vk::PhysicalDevice physical;
         vk::Device device;
         vk::Queue queue;
 
@@ -18,17 +19,21 @@ namespace vulkan {
         vk::SurfaceKHR surface;
         vk::SwapchainKHR swapChain;
     public:
-        Display(vk::Instance instance, vk::Device device, vk::Queue queue)
+        Display(vk::Instance instance, vk::PhysicalDevice physical, vk::Device device, vk::Queue queue)
                 : instance(instance)
+                , physical(physical)
                 , device(device)
                 , queue(queue)  {}
         void init();
+        void checkSurface();
         std::vector<vk::Image> getImages();
 
         uint32_t acquireNextFrameBufferId(vk::Semaphore semaphore);
         void display(vk::Semaphore semaphore, uint32_t frameBufferIdx);
 
         ~Display();
+
+
     };
 }
 
