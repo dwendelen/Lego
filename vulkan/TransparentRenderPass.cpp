@@ -45,26 +45,49 @@ void vulkan::TransparentRenderPass::initRenderPass() {
     colorAttachment.attachment = 1;
     colorAttachment.layout = ImageLayout::eColorAttachmentOptimal;
 
-    SubpassDescription subpass0;
-    subpass0.colorAttachmentCount = 0;
-    subpass0.pColorAttachments = nullptr;
-    subpass0.pDepthStencilAttachment = &depthAttachment;
 
+    SubpassDescription subpass0;
+    subpass0.colorAttachmentCount = 1;
+    subpass0.pColorAttachments = &colorAttachment;
+    subpass0.pDepthStencilAttachment = &depthAttachment;
+    
     SubpassDescription subpass1;
-    subpass1.colorAttachmentCount = 1;
-    subpass1.pColorAttachments = &colorAttachment;
+    subpass1.colorAttachmentCount = 0;
+    subpass1.pColorAttachments = nullptr;
     subpass1.pDepthStencilAttachment = &depthAttachment;
 
-    vector<SubpassDescription> subpasses{subpass0, subpass1};
-    SubpassDependency subpassDependency;
-    subpassDependency.srcSubpass = 0;
-    subpassDependency.dstSubpass = 1;
-    subpassDependency.srcStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
-    subpassDependency.dstStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
-    subpassDependency.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentWrite;
-    subpassDependency.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentRead;
-    vector<SubpassDependency> dependencies{subpassDependency};
+    SubpassDescription subpass2;
+    subpass2.colorAttachmentCount = 1;
+    subpass2.pColorAttachments = &colorAttachment;
+    subpass2.pDepthStencilAttachment = &depthAttachment;
 
+    vector<SubpassDescription> subpasses{subpass0, subpass1, subpass2};
+    SubpassDependency dependency0to1;
+    dependency0to1.srcSubpass = 0;
+    dependency0to1.dstSubpass = 1;
+    dependency0to1.srcStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency0to1.dstStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency0to1.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentWrite;
+    dependency0to1.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentRead;
+
+    SubpassDependency dependency1to2;
+    dependency1to2.srcSubpass = 1;
+    dependency1to2.dstSubpass = 2;
+    dependency1to2.srcStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency1to2.dstStageMask = PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency1to2.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentWrite;
+    dependency1to2.srcAccessMask = AccessFlagBits::eDepthStencilAttachmentRead;
+
+    SubpassDependency dependency0to2;
+    dependency0to2.srcSubpass = 0;
+    dependency0to2.dstSubpass = 2;
+    dependency0to2.srcStageMask = PipelineStageFlagBits::eColorAttachmentOutput;
+    dependency0to2.dstStageMask = PipelineStageFlagBits::eColorAttachmentOutput;
+    dependency0to2.srcAccessMask = AccessFlagBits::eColorAttachmentWrite;
+    dependency0to2.srcAccessMask = AccessFlagBits::eColorAttachmentRead;
+    
+    vector<SubpassDependency> dependencies{dependency0to1, dependency1to2, dependency0to2};
+    
     RenderPassCreateInfo renderPassInfo;
     renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
     renderPassInfo.pAttachments = attachments.data();
@@ -132,7 +155,8 @@ void vulkan::TransparentRenderPass::initPipelines() {
     fragmentShaderStage.module = fragmentShader;
     fragmentShaderStage.pName = "main";
 
-    vector<PipelineShaderStageCreateInfo> stages0{vertexShaderStage};
+    vector<PipelineShaderStageCreateInfo> stagesWithoutColorOutput{vertexShaderStage};
+    vector<PipelineShaderStageCreateInfo> stagesWithColorOutput{vertexShaderStage, fragmentShaderStage};
 
 
     VertexInputBindingDescription vertexBinding;
@@ -199,18 +223,31 @@ void vulkan::TransparentRenderPass::initPipelines() {
     depthInfo.stencilTestEnable = VK_FALSE;
 
 
+    PipelineColorBlendAttachmentState blendColorAttachment;
+    blendColorAttachment.blendEnable = VK_TRUE;
+    blendColorAttachment.colorWriteMask = ColorComponentFlags()
+                                          | ColorComponentFlagBits::eR
+                                          | ColorComponentFlagBits::eG
+                                          | ColorComponentFlagBits::eB
+                                          | ColorComponentFlagBits::eA;
+    blendColorAttachment.srcColorBlendFactor = BlendFactor::eSrcAlpha;
+    blendColorAttachment.dstColorBlendFactor = BlendFactor::eOneMinusSrcAlpha;
+    blendColorAttachment.colorBlendOp=BlendOp::eAdd;
+    blendColorAttachment.srcAlphaBlendFactor = BlendFactor::eOne;
+    blendColorAttachment.dstAlphaBlendFactor = BlendFactor::eZero;
+    blendColorAttachment.alphaBlendOp = BlendOp::eAdd;
+    vector<PipelineColorBlendAttachmentState> blendColorAttachments{blendColorAttachment};
 
-    vector<PipelineColorBlendAttachmentState> blendAttachments0{};
+    PipelineColorBlendStateCreateInfo blendInfoWithColorOutput;
+    blendInfoWithColorOutput.logicOpEnable = VK_FALSE;
+    blendInfoWithColorOutput.attachmentCount = static_cast<uint32_t>(blendColorAttachments.size());
+    blendInfoWithColorOutput.pAttachments = blendColorAttachments.data();
 
-    PipelineColorBlendStateCreateInfo blendInfo0;
-    blendInfo0.logicOpEnable = VK_FALSE;
-    blendInfo0.attachmentCount = static_cast<uint32_t>(blendAttachments0.size());
-    blendInfo0.pAttachments = blendAttachments0.data();
 
 
     GraphicsPipelineCreateInfo pipelineCreateInfo0;
-    pipelineCreateInfo0.stageCount = static_cast<uint32_t>(stages0.size());
-    pipelineCreateInfo0.pStages = stages0.data();
+    pipelineCreateInfo0.stageCount = static_cast<uint32_t>(stagesWithColorOutput.size());
+    pipelineCreateInfo0.pStages = stagesWithColorOutput.data();
     pipelineCreateInfo0.pVertexInputState = &inputInfo;
     pipelineCreateInfo0.pInputAssemblyState = &assemblyInfo;
     pipelineCreateInfo0.pTessellationState = {};
@@ -218,7 +255,7 @@ void vulkan::TransparentRenderPass::initPipelines() {
     pipelineCreateInfo0.pRasterizationState = &rasterInfo;
     pipelineCreateInfo0.pMultisampleState = &multisampleInfo;
     pipelineCreateInfo0.pDepthStencilState = &depthInfo;
-    pipelineCreateInfo0.pColorBlendState = nullptr;//&blendInfo0;
+    pipelineCreateInfo0.pColorBlendState = &blendInfoWithColorOutput;
     pipelineCreateInfo0.pDynamicState = {};
 
     pipelineCreateInfo0.layout = pipelineLayout;
@@ -226,35 +263,11 @@ void vulkan::TransparentRenderPass::initPipelines() {
     pipelineCreateInfo0.subpass = 0;
 
     pipeline0 = device.createGraphicsPipeline({}, pipelineCreateInfo0);
-
-
-
-    vector<PipelineShaderStageCreateInfo> stages1{vertexShaderStage, fragmentShaderStage};
-
-    PipelineColorBlendAttachmentState blend1;
-    blend1.blendEnable = VK_TRUE;
-    blend1.colorWriteMask = ColorComponentFlags()
-                            | ColorComponentFlagBits::eR
-                            | ColorComponentFlagBits::eG
-                            | ColorComponentFlagBits::eB
-                            | ColorComponentFlagBits::eA;
-    blend1.srcColorBlendFactor = BlendFactor::eSrcAlpha;
-    blend1.dstColorBlendFactor = BlendFactor::eOneMinusSrcAlpha;
-    blend1.colorBlendOp=BlendOp::eAdd;
-    blend1.srcAlphaBlendFactor = BlendFactor::eOne;
-    blend1.dstAlphaBlendFactor = BlendFactor::eZero;
-    blend1.alphaBlendOp = BlendOp::eAdd;
-    vector<PipelineColorBlendAttachmentState> blendAttachments1{blend1};
-
-    PipelineColorBlendStateCreateInfo blendInfo1;
-    blendInfo1.logicOpEnable = VK_FALSE;
-    blendInfo1.attachmentCount = static_cast<uint32_t>(blendAttachments1.size());
-    blendInfo1.pAttachments = blendAttachments1.data();
-
-
+    
+    
     GraphicsPipelineCreateInfo pipelineCreateInfo1;
-    pipelineCreateInfo1.stageCount = static_cast<uint32_t>(stages1.size());
-    pipelineCreateInfo1.pStages = stages1.data();
+    pipelineCreateInfo1.stageCount = static_cast<uint32_t>(stagesWithoutColorOutput.size());
+    pipelineCreateInfo1.pStages = stagesWithoutColorOutput.data();
     pipelineCreateInfo1.pVertexInputState = &inputInfo;
     pipelineCreateInfo1.pInputAssemblyState = &assemblyInfo;
     pipelineCreateInfo1.pTessellationState = {};
@@ -262,7 +275,7 @@ void vulkan::TransparentRenderPass::initPipelines() {
     pipelineCreateInfo1.pRasterizationState = &rasterInfo;
     pipelineCreateInfo1.pMultisampleState = &multisampleInfo;
     pipelineCreateInfo1.pDepthStencilState = &depthInfo;
-    pipelineCreateInfo1.pColorBlendState = &blendInfo1;
+    pipelineCreateInfo1.pColorBlendState = nullptr;
     pipelineCreateInfo1.pDynamicState = {};
 
     pipelineCreateInfo1.layout = pipelineLayout;
@@ -270,6 +283,26 @@ void vulkan::TransparentRenderPass::initPipelines() {
     pipelineCreateInfo1.subpass = 1;
 
     pipeline1 = device.createGraphicsPipeline({}, pipelineCreateInfo1);
+    
+
+    GraphicsPipelineCreateInfo pipelineCreateInfo2;
+    pipelineCreateInfo2.stageCount = static_cast<uint32_t>(stagesWithColorOutput.size());
+    pipelineCreateInfo2.pStages = stagesWithColorOutput.data();
+    pipelineCreateInfo2.pVertexInputState = &inputInfo;
+    pipelineCreateInfo2.pInputAssemblyState = &assemblyInfo;
+    pipelineCreateInfo2.pTessellationState = {};
+    pipelineCreateInfo2.pViewportState = &viewportInfo;
+    pipelineCreateInfo2.pRasterizationState = &rasterInfo;
+    pipelineCreateInfo2.pMultisampleState = &multisampleInfo;
+    pipelineCreateInfo2.pDepthStencilState = &depthInfo;
+    pipelineCreateInfo2.pColorBlendState = &blendInfoWithColorOutput;
+    pipelineCreateInfo2.pDynamicState = {};
+
+    pipelineCreateInfo2.layout = pipelineLayout;
+    pipelineCreateInfo2.renderPass = opaqueRenderPass;
+    pipelineCreateInfo2.subpass = 2;
+
+    pipeline2 = device.createGraphicsPipeline({}, pipelineCreateInfo2);
 
 }
 
@@ -279,6 +312,9 @@ vulkan::TransparentRenderPass::~TransparentRenderPass() {
     }
     if (pipeline1) {
         device.destroyPipeline(pipeline1);
+    }
+    if (pipeline2) {
+        device.destroyPipeline(pipeline2);
     }
     if (pipelineLayout) {
         device.destroyPipelineLayout(pipelineLayout);

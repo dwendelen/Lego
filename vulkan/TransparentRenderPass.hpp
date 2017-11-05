@@ -34,6 +34,7 @@ namespace vulkan {
         vk::PipelineLayout pipelineLayout;
         vk::Pipeline pipeline0;
         vk::Pipeline pipeline1;
+        vk::Pipeline pipeline2;
 
         void initRenderPass();
         void initSetLayouts();
@@ -69,6 +70,10 @@ namespace vulkan {
 
         vk::Pipeline getPipeline1() {
             return pipeline1;
+        }
+
+        vk::Pipeline getPipeline2() {
+            return pipeline2;
         }
 
         ~TransparentRenderPass();

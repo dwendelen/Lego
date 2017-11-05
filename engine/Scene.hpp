@@ -19,8 +19,9 @@ namespace engine {
     public:
         Camera &camera;
         std::vector<Object<ModelData, ObjectData>> objects;
+        Object<ModelData, ObjectData>& controllingObject;
 
-        explicit Scene(Camera &camera) : camera(camera) {}
+        explicit Scene(Camera &camera, Object<ModelData, ObjectData> & controllingObject) : camera(camera), controllingObject(controllingObject) {}
 
         Camera &getCamera() const {
             return camera;

@@ -301,19 +301,21 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     commandBuffer.nextSubpass(SubpassContents::eInline);
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
 
-    for (auto object: scene.objects) {
-        DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
-        DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
-        DeviceSize offsetUniform = object.objectData.dataOffset;
+    auto object = scene.controllingObject;
+    DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
+    DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
+    DeviceSize offsetUniform = object.objectData.dataOffset;
+    uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
 
-        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
-                                         {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
-        commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
-        commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
+    commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
+                                     {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
+    commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
+    commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
+    commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
 
-        uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
-        commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
-    }
+    commandBuffer.nextSubpass(SubpassContents::eInline);
+    commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline2());
+    commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
 
 
     commandBuffer.endRenderPass();

@@ -96,14 +96,17 @@ void vulkan::MemoryManager::init() {
     this->pvBuffer = device.createBuffer(createPvInfo);
     this->pvMemory = this->allocateMemory(pvBuffer, requiredProperties);
 
-    Vector3f z = Vector3f(0.0f,  0.0f, -1.0f);  // Forward
     Vector3f x = Vector3f(1.0f,  0.0f,  0.0f); // Right
     Vector3f y = Vector3f(0.0f, -1.0f,  0.0f);
+    Vector3f z = Vector3f(0.0f,  0.0f, -1.0f);  // Forward
 
-    Matrix4f view(	x.x, x.y, x.z, 0,
+    Quatf viewq {Vector3f{1,0,0},3.14/4};
+    Matrix4f view2(	x.x, x.y, x.z, 0,
                       y.x, y.y, y.z, 0,
                       z.x, z.y, z.z, 0,
                       0  , 0  , 0  , 1);
+    Matrix4f view {viewq};
+
     Matrix4f proj;
     float tanHalfFov = tan(0.15f);
 
@@ -113,7 +116,7 @@ void vulkan::MemoryManager::init() {
     proj.M[2][3] = (0.05f * 10.0f) / (0.05f - 10.0f);
     proj.M[3][2] = 1;
     proj.M[3][3] = 0;
-    Matrix4f pv = proj * view;
+    Matrix4f pv = proj * view * view2;
     /*
     Matrix4f view = Matrix4f::LookAtRH(Vector3f(0, 0, 0), Vector3f(0, 0, -1), Vector3f(0, 1, 0));
     Matrix4f proj = Matrix4f::PerspectiveRH(0.3f, 4.0f/3.0f, 0.05f, 10.0f);
@@ -185,11 +188,11 @@ void vulkan::MemoryManager::loadCamera(engine::Camera& camera) {
 }
 
 DeviceSize vulkan::MemoryManager::allocateBlock(vk::DeviceSize size) {
-    for(auto block: freeObjectMemory) {
-        if(block.size >= size) {
-            DeviceSize offset = block.offset;
-            block.offset += size;
-            block.size -= size;
+    for(auto i = 0; i < freeObjectMemory.size(); i++) {
+        if(freeObjectMemory[i].size >= size) {
+            DeviceSize offset = freeObjectMemory[i].offset;
+            freeObjectMemory[i].offset += size;
+            freeObjectMemory[i].size -= size;
 
             return offset;
         }
