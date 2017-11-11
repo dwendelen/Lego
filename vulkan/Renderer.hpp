@@ -16,7 +16,7 @@
 #include "Shader.hpp"
 #include "Context.hpp"
 #include "Display.hpp"
-#include "TransparentRenderPass.hpp"
+#include "RenderPass.hpp"
 
 
 namespace vulkan {
@@ -29,7 +29,7 @@ namespace vulkan {
 
         std::unique_ptr<Shader> vertexShader;
         std::unique_ptr<Shader> fragmentShader;
-        std::unique_ptr<TransparentRenderPass> transparentRenderPass;
+        std::unique_ptr<RenderPass> transparentRenderPass;
         std::unique_ptr<MemoryManager> memoryManager;
 
         vk::DescriptorPool descriptorPool;

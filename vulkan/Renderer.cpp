@@ -169,8 +169,8 @@ void vulkan::Renderer::init() {
 void Renderer::createOpagePipeline() {
     Device device = context->getDevice();
 
-    transparentRenderPass = unique_ptr<TransparentRenderPass>(
-            new TransparentRenderPass(
+    transparentRenderPass = unique_ptr<RenderPass>(
+            new RenderPass(
                     device,
                     vertexShader->getShaderModule(),
                     fragmentShader->getShaderModule()

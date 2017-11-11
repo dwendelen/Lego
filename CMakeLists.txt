@@ -57,7 +57,7 @@ if (Vulkan_FOUND)
             vulkan/Shader.cpp vulkan/Shader.hpp
             vulkan/Context.cpp vulkan/Context.hpp
             vulkan/Display.cpp vulkan/Display.hpp
-            vulkan/TransparentRenderPass.cpp vulkan/TransparentRenderPass.hpp
+            vulkan/RenderPass.cpp vulkan/RenderPass.hpp
             )
 
     target_link_libraries(LegoV ${CORE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})

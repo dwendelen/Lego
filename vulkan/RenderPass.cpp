@@ -2,21 +2,21 @@
 // Created by xtrit on 4/11/17.
 //
 
-#include "TransparentRenderPass.hpp"
+#include "RenderPass.hpp"
 
 
 using namespace vk;
 using namespace std;
 
 
-void vulkan::TransparentRenderPass::init() {
+void vulkan::RenderPass::init() {
     initRenderPass();
     initSetLayouts();
     initPipelineLayout();
     initPipelines();
 }
 
-void vulkan::TransparentRenderPass::initRenderPass() {
+void vulkan::RenderPass::initRenderPass() {
     AttachmentDescription depthBuffer;
     depthBuffer.format = Format::eD32Sfloat;
     depthBuffer.loadOp = AttachmentLoadOp::eClear;
@@ -99,7 +99,7 @@ void vulkan::TransparentRenderPass::initRenderPass() {
     opaqueRenderPass = device.createRenderPass(renderPassInfo);
 }
 
-void vulkan::TransparentRenderPass::initSetLayouts() {
+void vulkan::RenderPass::initSetLayouts() {
     DescriptorSetLayoutBinding vertexSet0Binding;
     vertexSet0Binding.binding = 0;
     vertexSet0Binding.descriptorCount = 1;
@@ -132,7 +132,7 @@ void vulkan::TransparentRenderPass::initSetLayouts() {
     set1Layout = device.createDescriptorSetLayout(set1LayoutInfo);
 }
 
-void vulkan::TransparentRenderPass::initPipelineLayout() {
+void vulkan::RenderPass::initPipelineLayout() {
     vector<DescriptorSetLayout> setLayouts{set0Layout, set1Layout};
 
     PipelineLayoutCreateInfo layoutInfo;
@@ -144,7 +144,7 @@ void vulkan::TransparentRenderPass::initPipelineLayout() {
     pipelineLayout = device.createPipelineLayout(layoutInfo);
 }
 
-void vulkan::TransparentRenderPass::initPipelines() {
+void vulkan::RenderPass::initPipelines() {
     PipelineShaderStageCreateInfo vertexShaderStage;
     vertexShaderStage.stage = ShaderStageFlagBits::eVertex;
     vertexShaderStage.module = vertexShader;
@@ -306,7 +306,7 @@ void vulkan::TransparentRenderPass::initPipelines() {
 
 }
 
-vulkan::TransparentRenderPass::~TransparentRenderPass() {
+vulkan::RenderPass::~RenderPass() {
     if (pipeline0) {
         device.destroyPipeline(pipeline0);
     }

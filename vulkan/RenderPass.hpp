@@ -2,8 +2,8 @@
 // Created by xtrit on 4/11/17.
 //
 
-#ifndef LEGO_TRANSPARENTRENDERPASS_HPP
-#define LEGO_TRANSPARENTRENDERPASS_HPP
+#ifndef LEGO_RENDERPASS_HPP
+#define LEGO_RENDERPASS_HPP
 
 
 #include <memory>
@@ -19,7 +19,7 @@
 #include "Display.hpp"
 
 namespace vulkan {
-    class TransparentRenderPass {
+    class RenderPass {
     private:
         vk::Device device;
         vk::ShaderModule vertexShader;
@@ -39,7 +39,7 @@ namespace vulkan {
         void initPipelineLayout();
         void initPipelines();
     public:
-        TransparentRenderPass(vk::Device& device,  vk::ShaderModule vertexShader, vk::ShaderModule fragmentShader)
+        RenderPass(vk::Device& device,  vk::ShaderModule vertexShader, vk::ShaderModule fragmentShader)
                 : device(device)
                 , vertexShader(vertexShader)
                 , fragmentShader(fragmentShader){}
@@ -74,9 +74,9 @@ namespace vulkan {
             return pipeline2;
         }
 
-        ~TransparentRenderPass();
+        ~RenderPass();
     };
 };
 
 
-#endif //LEGO_TRANSPARENTRENDERPASS_HPP
+#endif //LEGO_RENDERPASS_HPP
