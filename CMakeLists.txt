@@ -18,7 +18,7 @@ set(CORE_SRC
         engine/Camera.cpp engine/Camera.hpp
         lego/BrickModel.cpp lego/BrickModel.hpp
         lego/TriangleModel.hpp
-        )
+        engine/Math.hpp)
 set(CORE_LIBS ${SDL2_LIBRARY})
 set(CORE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
 

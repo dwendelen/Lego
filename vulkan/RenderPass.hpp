@@ -5,18 +5,7 @@
 #ifndef LEGO_RENDERPASS_HPP
 #define LEGO_RENDERPASS_HPP
 
-
-#include <memory>
 #include "vulkanExt.hpp"
-#include "../engine/RenderingEngine.hpp"
-#include "ModelData.hpp"
-#include "SDL.h"
-#include "MemoryManager.hpp"
-#include "ObjectData.hpp"
-#include "../engine/Object.hpp"
-#include "Shader.hpp"
-#include "Context.hpp"
-#include "Display.hpp"
 
 namespace vulkan {
     class RenderPass {

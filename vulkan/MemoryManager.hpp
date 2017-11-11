@@ -6,11 +6,18 @@
 #define LEGO_MEMORYMANAGER_HPP
 
 #include "vulkanExt.hpp"
-#include "../engine/Model.hpp"
 #include "ModelData.hpp"
 #include "ObjectData.hpp"
-#include "../engine/Object.hpp"
-#include "../engine/Camera.hpp"
+
+namespace engine {
+    template<class ModelData>
+    class Model;
+
+    template<class ModelData, class ObjectData>
+    class Object;
+
+    class Camera;
+}
 
 namespace vulkan {
     class MemoryBlock {

@@ -5,7 +5,7 @@
 #ifndef LEGO_OBJECT_HPP
 #define LEGO_OBJECT_HPP
 
-#include <Extras/OVR_Math.h>
+#include "Math.hpp"
 
 namespace engine {
     template<class T> class Model;

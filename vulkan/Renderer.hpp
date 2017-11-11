@@ -5,21 +5,19 @@
 #ifndef LEGO_VULKANRENDERER_HPP
 #define LEGO_VULKANRENDERER_HPP
 
-#include <memory>
 #include "vulkanExt.hpp"
 #include "../engine/RenderingEngine.hpp"
-#include "ModelData.hpp"
-#include "SDL.h"
-#include "MemoryManager.hpp"
-#include "ObjectData.hpp"
-#include "../engine/Object.hpp"
-#include "Shader.hpp"
+
 #include "Context.hpp"
+#include "Shader.hpp"
 #include "Display.hpp"
 #include "RenderPass.hpp"
-
+#include "MemoryManager.hpp"
 
 namespace vulkan {
+    class ModelData;
+    class ObjectData;
+
     class Renderer : public engine::RenderingEngine<ModelData, ObjectData> {
     private:
         std::unique_ptr<Context> context;

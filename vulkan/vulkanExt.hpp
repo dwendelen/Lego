@@ -13,18 +13,5 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace std
-{
-    template<>
-    class default_delete< vk::Instance >
-    {
-    public:
-        void operator()(vk::Instance *ptr)
-        {
-            ptr->destroy();
-        }
-    };
-}
-
 
 #endif //LEGO_VULKANEXT_HPP

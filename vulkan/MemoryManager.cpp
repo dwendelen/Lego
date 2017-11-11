@@ -3,6 +3,8 @@
 //
 
 #include "MemoryManager.hpp"
+#include "../engine/Object.hpp"
+#include "../engine/Model.hpp"
 #include "../engine/Camera.hpp"
 
 using namespace vk;

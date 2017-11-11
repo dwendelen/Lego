@@ -5,10 +5,7 @@
 #ifndef LEGO_MODEL_HPP
 #define LEGO_MODEL_HPP
 
-#ifndef isnan
-#define isnan(x) std::isnan(x)
-#endif
-#include <Extras/OVR_Math.h>
+#include "Math.hpp"
 #include <vector>
 
 typedef OVR::Vector3<uint32_t> Vector3ui;

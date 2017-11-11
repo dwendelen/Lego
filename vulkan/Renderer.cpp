@@ -3,16 +3,13 @@
 //
 
 #include "Renderer.hpp"
-#include "MemoryManager.hpp"
 #include "../engine/Scene.hpp"
 
 #include <iostream>
 #include <fstream>
-#include <SDL_syswm.h>
 
 #ifdef __LINUX__
 
-#include <X11/Xlib-xcb.h>
 #include <chrono>
 
 #endif
