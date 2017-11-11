@@ -16,8 +16,6 @@
 #include "../engine/Object.hpp"
 #include "Shader.hpp"
 #include "Context.hpp"
-#include "RenderPass.hpp"
-#include "SimpleRenderPass.hpp"
 #include "Display.hpp"
 
 namespace vulkan {

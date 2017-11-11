@@ -5,7 +5,6 @@
 #include "Renderer.hpp"
 #include "MemoryManager.hpp"
 #include "../engine/Scene.hpp"
-#include "SimpleRenderPass.hpp"
 
 #include <iostream>
 #include <fstream>

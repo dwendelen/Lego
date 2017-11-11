@@ -9,7 +9,16 @@ set(CMAKE_CXX_FLAGS -std=c++11)
 find_package(SDL2 REQUIRED)
 find_package(Vulkan QUIET)
 
-set(CORE_SRC engine/Engine.cpp engine/Engine.hpp engine/RenderingEngine.hpp engine/Model.hpp engine/Scene.cpp engine/Scene.hpp engine/Camera.cpp engine/Camera.hpp engine/Object.hpp vulkan/ModelData.hpp vulkan/vulkanExt.cpp lego/BrickModel.cpp lego/BrickModel.hpp lego/TriangleModel.hpp)
+set(CORE_SRC
+        engine/Engine.cpp engine/Engine.hpp
+        engine/RenderingEngine.hpp
+        engine/Model.hpp
+        engine/Object.hpp
+        engine/Scene.cpp engine/Scene.hpp
+        engine/Camera.cpp engine/Camera.hpp
+        lego/BrickModel.cpp lego/BrickModel.hpp
+        lego/TriangleModel.hpp
+        )
 set(CORE_LIBS ${SDL2_LIBRARY})
 set(CORE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
 
@@ -38,7 +47,18 @@ if (Vulkan_FOUND)
 
     include_directories(${CORE_INC} ${Vulkan_INCLUDE_DIR})
 
-    add_executable(LegoV ${CORE_SRC} mainVulkan.cpp vulkan/Renderer.cpp vulkan/Renderer.hpp vulkan/vulkanExt.hpp vulkan/MemoryManager.cpp vulkan/MemoryManager.hpp vulkan/ObjectData.hpp vulkan/Shader.cpp vulkan/Shader.hpp vulkan/Context.cpp vulkan/Context.hpp vulkan/RenderPass.cpp vulkan/RenderPass.hpp vulkan/SimpleRenderPass.cpp vulkan/SimpleRenderPass.hpp vulkan/Display.cpp vulkan/Display.hpp vulkan/TransparentRenderPass.cpp vulkan/TransparentRenderPass.hpp)
+    add_executable(LegoV ${CORE_SRC}
+            mainVulkan.cpp
+            vulkan/vulkanExt.hpp vulkan/vulkanExt.cpp
+            vulkan/ModelData.hpp
+            vulkan/ObjectData.hpp
+            vulkan/Renderer.cpp vulkan/Renderer.hpp
+            vulkan/MemoryManager.cpp vulkan/MemoryManager.hpp
+            vulkan/Shader.cpp vulkan/Shader.hpp
+            vulkan/Context.cpp vulkan/Context.hpp
+            vulkan/Display.cpp vulkan/Display.hpp
+            vulkan/TransparentRenderPass.cpp vulkan/TransparentRenderPass.hpp
+            )
 
     target_link_libraries(LegoV ${CORE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
     add_dependencies(LegoV Shaders)
