@@ -18,7 +18,7 @@ namespace vulkan {
     class ModelData;
     class ObjectData;
 
-    class Renderer : public engine::RenderingEngine<ModelData, ObjectData> {
+    class Renderer : public engine::RenderingEngine {
     private:
         std::unique_ptr<Context> context;
         std::unique_ptr<Display> display;
@@ -42,9 +42,9 @@ namespace vulkan {
         vk::Fence renderingDoneFence;
     public:
         void init();
-        void render(engine::Scene<ModelData, ObjectData> &scene) override;
-        void loadModel(engine::Model<ModelData> &model) override;
-        void loadObject(engine::Object<ModelData, ObjectData> &object) override;
+        void render(engine::Scene& scene) override;
+        void loadModel(engine::Model& model) override;
+        void loadObject(engine::Object& object) override;
         virtual ~Renderer();
 
         void createOpagePipeline();

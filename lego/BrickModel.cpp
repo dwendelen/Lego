@@ -11,8 +11,7 @@ using namespace std;
 void addStubs(int nbOfSegments, Vector3f center, float radius, float height, vector<Vector3f>& vertices, vector<Vector3ui>& indices);
 void addHollowCilinders(int nbOfSegments, Vector3f center, float innerRadius, float outerRadius, float height, vector<Vector3f>& vertices, vector<Vector3ui>& indices);
 
-template<class T>
-void lego::BrickModel<T>::init() {
+void lego::BrickModel::init() {
     float halfLengthStub =  0.004f;
     float heightBlock =		0.0032f;
     float edgePenalty =		0.0001f;
@@ -236,5 +235,3 @@ void addHollowCilinders(int nbOfSegments, Vector3f center, float innerRadius, fl
     indices.push_back(Vector3ui(firstIndex +  4, lowerRight +  5, lowerRight +  4)); //bottom
     indices.push_back(Vector3ui(firstIndex +  4, firstIndex +  5, lowerRight +  5));
 }
-
-template class lego::BrickModel<vulkan::ModelData>;

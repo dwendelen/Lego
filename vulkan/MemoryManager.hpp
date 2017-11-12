@@ -6,16 +6,14 @@
 #define LEGO_MEMORYMANAGER_HPP
 
 #include "vulkanExt.hpp"
+#include "../engine/Math.hpp"
+
 #include "ModelData.hpp"
 #include "ObjectData.hpp"
 
 namespace engine {
-    template<class ModelData>
     class Model;
-
-    template<class ModelData, class ObjectData>
     class Object;
-
     class Camera;
 }
 
@@ -39,7 +37,6 @@ namespace vulkan {
 
         vk::DeviceMemory objectMemory;
         vk::Buffer objectBuffer;
-        vk::DeviceSize objectBufferSize;
         std::vector<MemoryBlock> freeObjectMemory;
 
         vk::DeviceMemory pvMemory;
@@ -73,9 +70,11 @@ namespace vulkan {
 
         void allocateStatic(std::vector<vk::Image> images);
 
-        void loadModel(engine::Model<ModelData> &model);
+        void loadModel(engine::Model& model);
 
-        void loadObject(engine::Object<ModelData, ObjectData> &object);
+        void loadObject(engine::Object& object);
+
+        void updateControllingObject(engine::Object& controllingObject);
 
         void loadCamera(engine::Camera& camera);
 
@@ -83,5 +82,12 @@ namespace vulkan {
         virtual ~MemoryManager();
     };
 }
+
+class UniformData {
+public:
+    OVR::Matrix4f mvp;
+    OVR::Matrix4f rot;
+    OVR::Vector4f color;
+};
 
 #endif //LEGO_MEMORYMANAGER_HPP

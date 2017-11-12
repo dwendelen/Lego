@@ -8,17 +8,15 @@
 #include "Math.hpp"
 
 namespace engine {
-    template<class T> class Model;
-
-    template<class ModelData, class ObjectData>
+    class Model;
     class Object {
     private:
-        Model<ModelData> &model;
+        Model& model;
     public:
-        Object(   Model<ModelData> &model
+        Object(   Model& model
                 , OVR::Vector3f position
                 , OVR::Quatf orientation
-                , OVR::Vector4f color
+                , OVR::Vector3f color
         )
                 : model(model)
                 , position(position)
@@ -28,10 +26,11 @@ namespace engine {
 
         OVR::Vector3f position;
         OVR::Quatf orientation;
-        OVR::Vector4f color;
-        ObjectData objectData;
+        OVR::Vector3f color;
 
-        Model<ModelData> &getModel() const {
+        void* renderData;
+
+        Model& getModel() const {
             return model;
         }
     };

@@ -7,25 +7,34 @@
 
 
 #include <vector>
+#include "Math.hpp"
 #include "Object.hpp"
 
 namespace engine {
     class Camera;
 
-    template<class ModelData, class ObjectData>
     class Scene {
     private:
-
+        OVR::Vector3f pseudoPosition;
     public:
         Camera &camera;
-        std::vector<Object<ModelData, ObjectData>> objects;
-        Object<ModelData, ObjectData>& controllingObject;
+        std::vector<Object> objects;
+        Object& controllingObject;
 
-        explicit Scene(Camera &camera, Object<ModelData, ObjectData> & controllingObject) : camera(camera), controllingObject(controllingObject) {}
+        explicit Scene(Camera &camera, Object& controllingObject)
+                : camera(camera)
+                , controllingObject(controllingObject) {}
 
         Camera &getCamera() const {
             return camera;
         }
+
+        void placeBlock();
+        void move(OVR::Vector3f translation);
+        void moveUnit(OVR::Vector3i translation);
+        void rotate(OVR::Quatf rotation);
+
+        virtual ~Scene();
     };
 }
 

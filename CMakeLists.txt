@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.5)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 project(Lego)
@@ -16,9 +16,11 @@ set(CORE_SRC
         engine/Object.hpp
         engine/Scene.cpp engine/Scene.hpp
         engine/Camera.cpp engine/Camera.hpp
+        engine/InputManager.cpp engine/InputManager.hpp
         lego/BrickModel.cpp lego/BrickModel.hpp
         lego/TriangleModel.hpp
-        engine/Math.hpp)
+        engine/Math.hpp
+)
 set(CORE_LIBS ${SDL2_LIBRARY})
 set(CORE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
 
@@ -58,12 +60,12 @@ if (Vulkan_FOUND)
             vulkan/Context.cpp vulkan/Context.hpp
             vulkan/Display.cpp vulkan/Display.hpp
             vulkan/RenderPass.cpp vulkan/RenderPass.hpp
-            )
+    )
 
     target_link_libraries(LegoV ${CORE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
     add_dependencies(LegoV Shaders)
 
 
-else(Vulkan_FOUND)
+else (Vulkan_FOUND)
     message("No Vulkan")
 endif (Vulkan_FOUND)

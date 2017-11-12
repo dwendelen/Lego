@@ -4,6 +4,8 @@
 
 #include "Renderer.hpp"
 #include "../engine/Scene.hpp"
+#include "../engine/Model.hpp"
+#include "../engine/Object.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -176,7 +178,7 @@ void Renderer::createOpagePipeline() {
     transparentRenderPass->init();
 }
 
-void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectData> &scene) {
+void vulkan::Renderer::render(engine::Scene& scene) {
     Device device = context->getDevice();
 
     uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
@@ -263,9 +265,12 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline0());
 
     for (auto object: scene.objects) {
-        DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
-        DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
-        DeviceSize offsetUniform = object.objectData.dataOffset;
+        ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
+        ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
+
+        DeviceSize offsetIndices = modelData->indexOffset;
+        DeviceSize offsetVertices = modelData->vertexOffset;
+        DeviceSize offsetUniform = objectData->dataOffset;
 
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                          {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
@@ -276,13 +281,19 @@ void vulkan::Renderer::render(engine::Scene<vulkan::ModelData, vulkan::ObjectDat
         commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
     }
 
+    memoryManager->updateControllingObject(scene.controllingObject);
+
     commandBuffer.nextSubpass(SubpassContents::eInline);
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
 
     auto object = scene.controllingObject;
-    DeviceSize offsetIndices = object.getModel().getRenderData().indexOffset;
-    DeviceSize offsetVertices = object.getModel().getRenderData().vertexOffset;
-    DeviceSize offsetUniform = object.objectData.dataOffset;
+    ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
+    ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
+
+    DeviceSize offsetIndices = modelData->indexOffset;
+    DeviceSize offsetVertices = modelData->vertexOffset;
+    DeviceSize offsetUniform = objectData->dataOffset;
+
     uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
 
     commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
@@ -367,11 +378,11 @@ vulkan::Renderer::~Renderer() {
     context.reset();
 }
 
-void Renderer::loadModel(engine::Model<ModelData> &model) {
+void Renderer::loadModel(engine::Model& model) {
     memoryManager->loadModel(model);
 }
 
-void Renderer::loadObject(engine::Object<ModelData, ObjectData> &object) {
+void Renderer::loadObject(engine::Object &object) {
     memoryManager->loadObject(object);
 }
 

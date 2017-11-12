@@ -129,6 +129,7 @@ void vulkan::MemoryManager::init() {
     uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(pvMemory, 0, pvSize));
     memcpy(writeLocation, &data, sizeof(data));
     device.unmapMemory(pvMemory);
+
 }
 
 
@@ -162,7 +163,7 @@ void vulkan::MemoryManager::allocateStatic(vector<Image> images) {
     }
 }
 
-void vulkan::MemoryManager::loadModel(engine::Model<vulkan::ModelData> &model) {
+void vulkan::MemoryManager::loadModel(engine::Model& model) {
     DeviceSize sizeVertices = model.getVerticesWithNormal().size() * sizeof(OVR::Vector3f);
     DeviceSize sizeIndices = model.getIndices().size() * sizeof(Vector3ui);
 
@@ -178,11 +179,12 @@ void vulkan::MemoryManager::loadModel(engine::Model<vulkan::ModelData> &model) {
 
     modelOffset += sizeBoth;
 
-    ModelData modelData{};
-    modelData.vertexOffset = offsetVertices;
-    modelData.indexOffset = offsetIndices;
+    //TODO Cleanup model data
+    ModelData* modelData = new ModelData{};
+    modelData->vertexOffset = offsetVertices;
+    modelData->indexOffset = offsetIndices;
 
-    model.setRenderData(modelData);
+    model.renderData = modelData;
 }
 
 void vulkan::MemoryManager::loadCamera(engine::Camera& camera) {
@@ -204,20 +206,16 @@ DeviceSize vulkan::MemoryManager::allocateBlock(vk::DeviceSize size) {
 }
 
 
-void vulkan::MemoryManager::loadObject(engine::Object<vulkan::ModelData, vulkan::ObjectData> &object) {
-    struct Input {
-        Matrix4f mvp;
-        Matrix4f rot;
-        Vector4f color;
-    } Input;
+void vulkan::MemoryManager::loadObject(engine::Object& object) {
+
 
     Matrix4<float> orientation = Matrix4f(object.orientation);
     Matrix4f model = Matrix4f::Translation(object.position) * orientation;
 
-    struct Input data = {
+    UniformData data = {
         model.Transposed(),
         orientation.Transposed(),
-        object.color
+        Vector4f(object.color, 1.0f)
     };
 
     DeviceSize sizeData = sizeof(data);
@@ -229,10 +227,31 @@ void vulkan::MemoryManager::loadObject(engine::Object<vulkan::ModelData, vulkan:
     memcpy(writeLocation, &data, sizeData);
     device.unmapMemory(objectMemory);
 
-    ObjectData objectData {};
-    objectData.dataOffset = offset;
+    ObjectData* objectData = new ObjectData{};
+    objectData->dataOffset = offset;
 
-    object.objectData = objectData;
+    object.renderData = objectData;
+}
+
+void vulkan::MemoryManager::updateControllingObject(engine::Object &controllingObject) {
+    ObjectData* objectData = static_cast<ObjectData *>(controllingObject.renderData);
+
+    Matrix4<float> orientation = Matrix4f(controllingObject.orientation);
+    Matrix4f model = Matrix4f::Translation(controllingObject.position) * orientation;
+
+    UniformData data = {
+            model.Transposed(),
+            orientation.Transposed(),
+            Vector4f(controllingObject.color, 0.5f)
+    };
+
+    DeviceSize sizeData = sizeof(data);
+    DeviceSize alignedSize = align(sizeData, physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
+
+
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory, objectData->dataOffset, alignedSize));
+    memcpy(writeLocation, &data, sizeData);
+    device.unmapMemory(objectMemory);
 }
 
 vulkan::MemoryManager::~MemoryManager() {
@@ -263,4 +282,6 @@ vulkan::MemoryManager::~MemoryManager() {
         device.freeMemory(objectMemory);
     }
 }
+
+
 

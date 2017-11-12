@@ -7,14 +7,12 @@
 
 
 namespace engine {
-    template<class ModelData, class ObjectData>
     class RenderingEngine;
 
-    template<class ModelData, class ObjectData>
     class Engine {
-        RenderingEngine<ModelData, ObjectData> &renderingEngine;
+        RenderingEngine& renderingEngine;
     public:
-        explicit Engine(RenderingEngine<ModelData, ObjectData> &renderingEngine)
+        explicit Engine(RenderingEngine& renderingEngine)
                 : renderingEngine(renderingEngine) {}
         void init();
         virtual ~Engine() = default;

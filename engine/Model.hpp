@@ -11,15 +11,14 @@
 typedef OVR::Vector3<uint32_t> Vector3ui;
 
 namespace engine {
-    template<class RenderData>
     class Model {
 
     public:
         virtual std::vector <OVR::Vector3f> getVerticesWithNormal()=0;
         virtual std::vector <Vector3ui> getIndices()=0;
 
-        virtual RenderData getRenderData() = 0;
-        virtual void setRenderData(RenderData renderData) = 0;
+        void * renderData;
+
         virtual ~Model() = default;
     };
 }

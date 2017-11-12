@@ -8,10 +8,7 @@
 #include "../engine/Model.hpp"
 
 namespace lego {
-    template<class Data>
-    class TriangleModel : public engine::Model<Data> {
-    private:
-        Data renderData;
+    class TriangleModel : public engine::Model {
     public:
         virtual std::vector <OVR::Vector3f> getVerticesWithNormal() {
             return std::vector<OVR::Vector3f> {
@@ -26,14 +23,6 @@ namespace lego {
         virtual std::vector <Vector3ui> getIndices() {
             return std::vector<Vector3ui> {{0, 1, 2}};
         };
-
-        Data getRenderData() {
-            return renderData;
-        }
-
-        void setRenderData(Data renderData) {
-            this->renderData = renderData;
-        }
 
         virtual ~TriangleModel() = default;
     };
