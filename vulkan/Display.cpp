@@ -72,7 +72,7 @@ void vulkan::Display::init() {
     swapCreateInfo.imageUsage = ImageUsageFlagBits::eColorAttachment;
     swapCreateInfo.imageSharingMode = SharingMode::eExclusive;
     swapCreateInfo.preTransform = SurfaceTransformFlagBitsKHR::eIdentity;
-    swapCreateInfo.compositeAlpha = CompositeAlphaFlagBitsKHR::ePostMultiplied;
+    swapCreateInfo.compositeAlpha = CompositeAlphaFlagBitsKHR::eOpaque;
     swapCreateInfo.clipped = VK_TRUE;
     swapCreateInfo.presentMode = PresentModeKHR::eFifoRelaxed;
 

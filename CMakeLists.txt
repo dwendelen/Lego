@@ -9,7 +9,8 @@ set(CMAKE_CXX_FLAGS -std=c++11)
 find_package(SDL2 REQUIRED)
 find_package(Vulkan QUIET)
 
-set(CORE_SRC
+set(ENGINE_SRC
+        engine/Math.hpp
         engine/Engine.cpp engine/Engine.hpp
         engine/RenderingEngine.hpp
         engine/Model.hpp
@@ -17,12 +18,17 @@ set(CORE_SRC
         engine/Scene.cpp engine/Scene.hpp
         engine/Camera.cpp engine/Camera.hpp
         engine/InputManager.cpp engine/InputManager.hpp
+        engine/InputMapping.hpp
+)
+set(ENGINE_LIBS ${SDL2_LIBRARY})
+set(ENGINE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
+
+set(LEGO_SRC
         lego/BrickModel.cpp lego/BrickModel.hpp
         lego/TriangleModel.hpp
-        engine/Math.hpp
+        lego/Game.cpp lego/Game.hpp
+        lego/GameInputMapping.cpp lego/GameInputMapping.hpp
 )
-set(CORE_LIBS ${SDL2_LIBRARY})
-set(CORE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
 
 if (Vulkan_FOUND)
     find_package(X11_XCB REQUIRED)
@@ -47,10 +53,7 @@ if (Vulkan_FOUND)
             DEPENDS shaders/vert.spv shaders/frag.spv
     )
 
-    include_directories(${CORE_INC} ${Vulkan_INCLUDE_DIR})
-
-    add_executable(LegoV ${CORE_SRC}
-            mainVulkan.cpp
+    set(VULKAN_SRC
             vulkan/vulkanExt.hpp vulkan/vulkanExt.cpp
             vulkan/ModelData.hpp
             vulkan/ObjectData.hpp
@@ -62,7 +65,16 @@ if (Vulkan_FOUND)
             vulkan/RenderPass.cpp vulkan/RenderPass.hpp
     )
 
-    target_link_libraries(LegoV ${CORE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
+    include_directories(${ENGINE_INC} ${Vulkan_INCLUDE_DIR})
+
+    add_executable(LegoV
+            ${ENGINE_SRC}
+            ${VULKAN_SRC}
+            ${LEGO_SRC}
+            mainVulkan.cpp
+    )
+
+    target_link_libraries(LegoV ${ENGINE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
     add_dependencies(LegoV Shaders)
 
 

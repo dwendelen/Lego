@@ -3,6 +3,7 @@
 //
 
 #include "Scene.hpp"
+#include "../lego/BrickModel.hpp"
 
 
 using namespace OVR;
@@ -24,14 +25,20 @@ const vector<Vector3f> colors = {
         Vector3f(0.0f, 0.0f, 1.0f)
 };
 
+
+void engine::Scene::init() {
+
+}
+
+
 void engine::Scene::rotate(Quatf rotation)
 {
-    Quatf orientation = rotation * controllingObject.orientation;
+    Quatf orientation = rotation * controllingObject->orientation;
     if(!orientation.IsNormalized()) {
         orientation.Normalize();
     }
 
-    controllingObject.orientation = orientation;
+    controllingObject->orientation = orientation;
 }
 
 
@@ -67,13 +74,13 @@ void engine::Scene::move(Vector3f translation) {
     movement.y = calculateMovement(pseudoPosition.y, translation.y, HALF_GRID_Y, GRID_Y);
     movement.z = calculateMovement(pseudoPosition.z, translation.z, HALF_GRID_Z, GRID_Z);
 
-    controllingObject.position += movement;
+    controllingObject->position += movement;
 }
 
 
 
 void engine::Scene::placeBlock() {
-    objects.push_back(controllingObject);
+    //placedObjects.push_back(controllingObject);
 }
 
 engine::Scene::~Scene()

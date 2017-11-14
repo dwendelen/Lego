@@ -264,7 +264,9 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline0());
 
-    for (auto object: scene.objects) {
+    //TODO fix access to objects
+    for(int i = 0; i < scene.placedObjects.size(); i++) {
+        auto object = *scene.placedObjects[i];
         ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
         ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
 
@@ -281,12 +283,12 @@ void vulkan::Renderer::render(engine::Scene& scene) {
         commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
     }
 
-    memoryManager->updateControllingObject(scene.controllingObject);
+    memoryManager->updateControllingObject(*scene.controllingObject);
 
     commandBuffer.nextSubpass(SubpassContents::eInline);
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
 
-    auto object = scene.controllingObject;
+    auto object = *scene.controllingObject;
     ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
     ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
 

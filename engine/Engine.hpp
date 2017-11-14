@@ -5,16 +5,36 @@
 #ifndef LEGO_ENGINE_HPP
 #define LEGO_ENGINE_HPP
 
+#include <memory>
+
+namespace lego {
+    class Game;
+}
 
 namespace engine {
     class RenderingEngine;
+    class InputManager;
+    class Scene;
 
     class Engine {
         RenderingEngine& renderingEngine;
+        InputManager& inputManager;
+        Scene& scene;
+        lego::Game& game;
     public:
-        explicit Engine(RenderingEngine& renderingEngine)
-                : renderingEngine(renderingEngine) {}
+        Engine(RenderingEngine &renderingEngine,
+               InputManager &inputManager,
+               Scene &scene,
+               lego::Game &game
+        )
+                : renderingEngine(renderingEngine),
+                  inputManager(inputManager),
+                  scene(scene),
+                  game(game)
+        {}
+
         void init();
+        void run();
         virtual ~Engine() = default;
     };
 }

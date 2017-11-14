@@ -12,6 +12,7 @@ namespace engine {
 
     class RenderingEngine {
     public:
+        virtual void init() = 0;
         virtual void render(Scene& scene) = 0;
         virtual void loadModel(engine::Model& model) = 0;
         virtual void loadObject(engine::Object& object) = 0;

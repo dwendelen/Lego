@@ -41,7 +41,7 @@ namespace vulkan {
         vk::Semaphore renderingDone;
         vk::Fence renderingDoneFence;
     public:
-        void init();
+        void init() override;
         void render(engine::Scene& scene) override;
         void loadModel(engine::Model& model) override;
         void loadObject(engine::Object& object) override;

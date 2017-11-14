@@ -7,6 +7,7 @@
 
 
 #include <vector>
+#include <bits/unique_ptr.h>
 #include "Math.hpp"
 #include "Object.hpp"
 
@@ -17,18 +18,12 @@ namespace engine {
     private:
         OVR::Vector3f pseudoPosition;
     public:
-        Camera &camera;
-        std::vector<Object> objects;
-        Object& controllingObject;
+        std::vector<std::unique_ptr<Object>> placedObjects;
+        std::unique_ptr<Object> controllingObject;
 
-        explicit Scene(Camera &camera, Object& controllingObject)
-                : camera(camera)
-                , controllingObject(controllingObject) {}
+        explicit Scene() = default;
 
-        Camera &getCamera() const {
-            return camera;
-        }
-
+        void init();
         void placeBlock();
         void move(OVR::Vector3f translation);
         void moveUnit(OVR::Vector3i translation);
