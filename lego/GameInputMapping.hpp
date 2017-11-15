@@ -11,8 +11,15 @@ namespace lego {
     class Game;
 
     class GameInputMapping : public engine::InputMapping {
+    private:
+        Game& game;
+        float x;
+        float y;
+        float z;
     public:
-        explicit GameInputMapping(Game& game) {}
+        explicit GameInputMapping(Game& game)
+            :game(game)
+        {}
 
         void preInput() override;
 

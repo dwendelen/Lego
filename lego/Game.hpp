@@ -18,6 +18,8 @@ namespace engine {
 
 namespace lego {
     class Game {
+    private:
+        OVR::Vector3f pseudoPosition;
     public:
         Game(engine::Scene& scene,
              engine::RenderingEngine& renderingEngine,
@@ -33,6 +35,10 @@ namespace lego {
         }
 
         void init();
+        void placeBlock();
+        void moveUnit(OVR::Vector3i translation);
+        void rotate(OVR::Quatf rotation);
+        void setVelocity(OVR::Vector3f velocity);
 
     private:
         engine::Scene& scene;

@@ -79,11 +79,6 @@ namespace engine {
         }
 
         inputMapping->postInput();
-        //float meterPerMilisec = 0.0001f;
-        //game.move({x * meterPerMilisec * elapsedMilis, r * meterPerMilisec * elapsedMilis,
-        //           y * meterPerMilisec * elapsedMilis});
-        //scene.move({x * meterPerMilisec * elapsedMilis, r * meterPerMilisec * elapsedMilis,
-        //            y * meterPerMilisec * elapsedMilis});
     }
 
     void InputManager::handleAxis(const SDL_Event &windowEvent, Uint8 axis) {
@@ -96,7 +91,6 @@ namespace engine {
                 break;
             case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
                 l = convertinput(windowEvent.caxis.value);
-                //l = -convertinput(windowEvent.caxis.value);
                 break;
             case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
                 r = convertinput(windowEvent.caxis.value);
@@ -110,7 +104,6 @@ namespace engine {
         switch (button) {
             case SDL_CONTROLLER_BUTTON_A:
                 inputMapping->onA();
-                //game.placeBlock();
                 break;
             case SDL_CONTROLLER_BUTTON_B:
                 inputMapping->onB();
@@ -122,31 +115,24 @@ namespace engine {
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
                 inputMapping->onUp();
-                //game.moveUnit({0, 0, -1});
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                 inputMapping->onDown();
-                //game.moveUnit({0, 0,  1});
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                 inputMapping->onLeft();
-                //game.moveUnit({-1, 0, 0});
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                 inputMapping->onRight();
-                //game.moveUnit({ 1, 0, 0});
                 break;
             case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
                 inputMapping->onRightShoulder();
-                //game.rotate(Quatf(Vector3f(0, 1, 0), -M_PI_2));
                 break;
             case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
                 inputMapping->onLeftShoulder();
-                //game.rotate(Quatf(Vector3f(0, 1, 0), M_PI_2));
                 break;
             case SDL_CONTROLLER_BUTTON_START:
                 inputMapping->onStartButton();
-                //game.quit();
                 break;
             default:
                 break;

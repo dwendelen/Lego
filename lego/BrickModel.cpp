@@ -3,7 +3,6 @@
 //
 
 #include "BrickModel.hpp"
-#include "../vulkan/ModelData.hpp"
 
 using namespace OVR;
 using namespace std;

@@ -7,7 +7,7 @@
 
 
 #include <vector>
-#include <bits/unique_ptr.h>
+#include <memory>
 #include "Math.hpp"
 #include "Object.hpp"
 
@@ -16,10 +16,9 @@ namespace engine {
 
     class Scene {
     private:
-        OVR::Vector3f pseudoPosition;
     public:
         std::vector<std::unique_ptr<Object>> placedObjects;
-        std::unique_ptr<Object> controllingObject;
+        std::unique_ptr<MovingObject> controllingObject;
 
         explicit Scene() = default;
 

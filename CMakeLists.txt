@@ -81,3 +81,13 @@ if (Vulkan_FOUND)
 else (Vulkan_FOUND)
     message("No Vulkan")
 endif (Vulkan_FOUND)
+
+include_directories(${ENGINE_INC})
+
+add_executable(LegoC
+        ${ENGINE_SRC}
+        ${LEGO_SRC}
+        console/ConsoleRenderer.cpp console/ConsoleRenderer.hpp
+        mainConsole.cpp
+)
+target_link_libraries(LegoC ${ENGINE_LIBS})

@@ -4,7 +4,9 @@
 
 #include "Engine.hpp"
 
-#include "SDL.h"
+#include <string>
+
+#include <SDL.h>
 #include "RenderingEngine.hpp"
 #include "InputManager.hpp"
 #include "Scene.hpp"
