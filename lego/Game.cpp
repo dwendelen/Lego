@@ -31,20 +31,15 @@ const vector<Vector3f> colors = {
 };
 
 void lego::Game::init() {
-
     std::cout << "Hello, World!" << std::endl;
-
 
     brick.init();
     brick2.init();
 
-
     auto orientation = Quatf(0.0f, 0.0f, 0.0f, 1.0f);
     std::unique_ptr<engine::Object> object1  = unique_ptr<Object>{new Object {brick, Vector3f{-0.032f,-0.2f,-0.2f}, orientation, Vector3f{1.0f,1.0f,1.0f}}};
     std::unique_ptr<engine::Object> object2  = unique_ptr<Object>{new Object {brick2, Vector3f{0.0f,-0.2f,-0.216f}, orientation, Vector3f{1.0f,0.0f,0.0f}}};
-    std::unique_ptr<engine::MovingObject> transparentBrick = unique_ptr<MovingObject> {new MovingObject{brick, Vector3f{0.0f, -0.2f, -0.2f}, orientation, Vector3f{1.0f, 1.0f, 1.0f}}};
-
-
+    std::unique_ptr<engine::Object> transparentBrick = unique_ptr<Object> {new Object{brick, Vector3f{0.0f, -0.2f, -0.2f}, orientation, Vector3f{1.0f, 1.0f, 1.0f}}};
 
     renderingEngine.loadModel(brick);
     renderingEngine.loadModel(brick2);
@@ -57,15 +52,11 @@ void lego::Game::init() {
     scene.controllingObject = std::move(transparentBrick);
 
     inputManager.setMapping(*inputMapping);
-
 }
 
 void lego::Game::setVelocity(OVR::Vector3f velocity) {
-    scene.controllingObject->velocity = velocity;
-
+    this->velocity = velocity;
 }
-
-
 
 void lego::Game::rotate(Quatf rotation)
 {
@@ -76,7 +67,6 @@ void lego::Game::rotate(Quatf rotation)
 
     scene.controllingObject->orientation = orientation;
 }
-
 
 void lego::Game::moveUnit(Vector3i translation) {
     move({
@@ -104,17 +94,21 @@ float calculateMovement(float& value, float delta, float halfGrid, float grid) {
         }
     }
 }
+void lego::Game::tick(float secondsPassed) {
+    this->move(velocity * secondsPassed);
+}
+
 void lego::Game::move(Vector3f translation) {
     Vector3f movement;
     movement.x = calculateMovement(pseudoPosition.x, translation.x, HALF_GRID_X, GRID_X);
     movement.y = calculateMovement(pseudoPosition.y, translation.y, HALF_GRID_Y, GRID_Y);
     movement.z = calculateMovement(pseudoPosition.z, translation.z, HALF_GRID_Z, GRID_Z);
 
-    controllingObject->position += movement;
+    scene.controllingObject->position += movement;
 }
 
-
-
 void lego::Game::placeBlock() {
-    //placedObjects.push_back(controllingObject);
+    unique_ptr<Object> newObject = unique_ptr<Object>(new Object(*scene.controllingObject));
+    renderingEngine.loadObject(*newObject);
+    scene.placedObjects.push_back(std::move(newObject));
 }

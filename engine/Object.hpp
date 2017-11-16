@@ -34,23 +34,6 @@ namespace engine {
             return model;
         }
     };
-
-    class MovingObject: public Object {
-    public:
-        OVR::Vector3f velocity;
-
-        MovingObject(
-                Model &model,
-                OVR::Vector3f position,
-                OVR::Quatf orientation,
-                OVR::Vector3f color
-        ) : Object(model, position, orientation, color)
-        {}
-
-        void move(float seconds) {
-            position += velocity * seconds;
-        }
-    };
 }
 
 #endif //LEGO_OBJECT_HPP

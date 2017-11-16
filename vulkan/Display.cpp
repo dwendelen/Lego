@@ -74,7 +74,8 @@ void vulkan::Display::init() {
     swapCreateInfo.preTransform = SurfaceTransformFlagBitsKHR::eIdentity;
     swapCreateInfo.compositeAlpha = CompositeAlphaFlagBitsKHR::eOpaque;
     swapCreateInfo.clipped = VK_TRUE;
-    swapCreateInfo.presentMode = PresentModeKHR::eFifoRelaxed;
+    //swapCreateInfo.presentMode = PresentModeKHR::eFifoRelaxed;
+    swapCreateInfo.presentMode = PresentModeKHR::eImmediate;
 
     swapChain = device.createSwapchainKHR(swapCreateInfo);
 }

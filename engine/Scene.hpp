@@ -18,7 +18,7 @@ namespace engine {
     private:
     public:
         std::vector<std::unique_ptr<Object>> placedObjects;
-        std::unique_ptr<MovingObject> controllingObject;
+        std::unique_ptr<Object> controllingObject;
 
         explicit Scene() = default;
 

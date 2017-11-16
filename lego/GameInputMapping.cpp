@@ -17,8 +17,12 @@ void lego::GameInputMapping::preInput() {
 }
 
 void lego::GameInputMapping::postInput() {
-    float meterPerMilisec = 0.0001f;
-    game.setVelocity({x * meterPerMilisec, y * meterPerMilisec, z * meterPerMilisec});
+    float meterPerSec = 0.1f;
+    game.setVelocity({x * meterPerSec, y * meterPerSec, z * meterPerSec});
+}
+
+void lego::GameInputMapping::onQuit() {
+    game.quit();
 }
 
 void lego::GameInputMapping::onUp() {

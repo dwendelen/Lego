@@ -17,10 +17,12 @@ namespace engine {
     class Scene;
 
     class Engine {
+    private:
         RenderingEngine& renderingEngine;
         InputManager& inputManager;
         Scene& scene;
         lego::Game& game;
+        uint32_t lastTick;
     public:
         Engine(RenderingEngine &renderingEngine,
                InputManager &inputManager,

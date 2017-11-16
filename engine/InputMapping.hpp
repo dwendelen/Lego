@@ -10,6 +10,7 @@ namespace engine {
     public:
         virtual void preInput() = 0;
         virtual void postInput() = 0;
+        virtual void onQuit() = 0;
 
         virtual void onUp() = 0;
 
@@ -54,6 +55,7 @@ namespace engine {
 
         void preInput() override {}
         void postInput() override {}
+        void onQuit() override {}
 
         void onUp() override {}
         void onDown() override {}

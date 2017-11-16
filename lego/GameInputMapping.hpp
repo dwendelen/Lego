@@ -25,6 +25,8 @@ namespace lego {
 
         void postInput() override;
 
+        void onQuit() override;
+
         void onUp() override;
 
         void onDown() override;

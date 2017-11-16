@@ -7,6 +7,7 @@
 #include <string>
 
 #include <SDL.h>
+#include <iostream>
 #include "RenderingEngine.hpp"
 #include "InputManager.hpp"
 #include "Scene.hpp"
@@ -23,11 +24,19 @@ void engine::Engine::init() {
     inputManager.init();
     scene.init();
     game.init();
+
+    lastTick = SDL_GetTicks();
 }
 
 void engine::Engine::run() {
-    while(!inputManager.isShouldQuit()) {//for(int i = 0; i < 100; i++) {
+    while(game.isRunning()) {
+        uint32_t newTick = SDL_GetTicks();
+        float secondsPassed = (newTick - lastTick) / 1000.0f;
+        cout << "FPS " << 1/secondsPassed << endl;
+        lastTick = newTick;
+
         inputManager.processInput();
+        game.tick(secondsPassed);
         renderingEngine.render(scene);
     }
 }

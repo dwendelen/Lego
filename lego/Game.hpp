@@ -19,7 +19,9 @@ namespace engine {
 namespace lego {
     class Game {
     private:
+        bool running;
         OVR::Vector3f pseudoPosition;
+        OVR::Vector3f velocity;
     public:
         Game(engine::Scene& scene,
              engine::RenderingEngine& renderingEngine,
@@ -29,16 +31,25 @@ namespace lego {
                   scene(scene),
                   inputManager(inputManager),
                   brick{4,2,3},
-                  brick2 {2,2,3}
+                  brick2 {2,2,3},
+                  running(true)
         {
             inputMapping = std::unique_ptr<GameInputMapping> (new GameInputMapping(*this));
         }
 
         void init();
+        bool isRunning() {
+            return running;
+        }
+        void tick(float secondsPassed);
+
         void placeBlock();
         void moveUnit(OVR::Vector3i translation);
         void rotate(OVR::Quatf rotation);
         void setVelocity(OVR::Vector3f velocity);
+        void quit() {
+            running = false;
+        }
 
     private:
         engine::Scene& scene;
@@ -49,6 +60,8 @@ namespace lego {
 
         lego::BrickModel brick;
         lego::BrickModel brick2;
+
+        void move(OVR::Vector3f translation);
     };
 }
 

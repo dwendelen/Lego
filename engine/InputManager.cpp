@@ -43,7 +43,7 @@ namespace engine {
         while (SDL_PollEvent(&windowEvent)) {
             switch (windowEvent.type) {
                 case SDL_QUIT:
-                    quit();
+                    inputMapping->onQuit();
                     return;
                 case SDL_KEYDOWN:
                     handleKey(windowEvent.key.keysym.scancode);
@@ -170,10 +170,6 @@ namespace engine {
             default:
                 break;
         }
-    }
-
-    void InputManager::quit() {
-        shouldQuit = true;
     }
 
     InputManager::~InputManager() {
