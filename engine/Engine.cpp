@@ -50,5 +50,6 @@ void engine::Engine::run() {
         cout << "input    " << std::chrono::duration<double, milli>(input - ticks).count() << endl;
         cout << "physics  " << std::chrono::duration<double, milli>(fysics - input).count() << endl;
         cout << "renderin " << std::chrono::duration<double, milli>(render - fysics).count() << endl;
+        cout << "FPS 2    " << 1000.0/std::chrono::duration<double, milli>(render - start).count() << endl;
     }
 }

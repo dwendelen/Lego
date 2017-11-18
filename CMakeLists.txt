@@ -49,6 +49,7 @@ if (Vulkan_FOUND)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders
             COMMENT "Compile fragment shader"
     )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/shaders)
     add_custom_target(
             Shaders
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shaders/vert.spv ${CMAKE_CURRENT_BINARY_DIR}/shaders/frag.spv
