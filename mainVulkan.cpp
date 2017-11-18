@@ -15,9 +15,15 @@ using namespace vulkan;
 using namespace OVR;
 
 int main() {
+#ifdef LEGO_DEBUG
+    bool debug = true;
+    std::cout << "Debug!" << std::endl;
+#else
+    bool debug = false;
+#endif
     Scene scene;
     InputManager inputManager;
-    Renderer renderer{true};
+    Renderer renderer{debug};
     lego::Game game {scene, renderer, inputManager};
 
     engine::Engine engine {renderer, inputManager, scene, game};

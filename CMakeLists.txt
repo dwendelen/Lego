@@ -5,6 +5,7 @@ project(Lego)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS -std=c++11)
+set(CMAKE_CXX_FLAGS_DEBUG "-DLEGO_DEBUG")
 
 find_package(SDL2 REQUIRED)
 find_package(Vulkan QUIET)
@@ -35,22 +36,22 @@ if (Vulkan_FOUND)
     message("Found Vulkan")
 
     add_custom_command(
-            OUTPUT shaders/vert.spv
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/shaders/vert.spv
             DEPENDS shaders/vert.vert
-            COMMAND glslangValidator -V vert.vert
-            WORKING_DIRECTORY shaders
+            COMMAND glslangValidator -V vert.vert -o ${CMAKE_CURRENT_BINARY_DIR}/shaders/vert.spv
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders
             COMMENT "Compile vertex shader"
     )
     add_custom_command(
-            OUTPUT shaders/frag.spv
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/shaders/frag.spv
             DEPENDS shaders/frag.frag
-            COMMAND glslangValidator -V frag.frag
-            WORKING_DIRECTORY shaders
+            COMMAND glslangValidator -V frag.frag -o ${CMAKE_CURRENT_BINARY_DIR}/shaders/frag.spv
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders
             COMMENT "Compile fragment shader"
     )
     add_custom_target(
             Shaders
-            DEPENDS shaders/vert.spv shaders/frag.spv
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shaders/vert.spv ${CMAKE_CURRENT_BINARY_DIR}/shaders/frag.spv
     )
 
     set(VULKAN_SRC
