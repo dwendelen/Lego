@@ -13,6 +13,7 @@ namespace vulkan {
         std::vector<char const *> layers;
         std::vector<char const *> instanceExtensions;
         std::vector<char const *> deviceExtensions;
+        bool debug;
 
         vk::Instance instance;
         vk::PhysicalDevice physical;
@@ -28,11 +29,13 @@ namespace vulkan {
     public:
         Context(std::vector<char const *> layers,
                 std::vector<char const *> instanceExtensions,
-                std::vector<char const *> deviceExtensions
+                std::vector<char const *> deviceExtensions,
+                bool debug
         )
                 :layers(layers)
                 ,instanceExtensions(instanceExtensions)
-                ,deviceExtensions(deviceExtensions){}
+                ,deviceExtensions(deviceExtensions)
+                ,debug(debug){}
 
         vk::Instance getInstance() {
             return instance;

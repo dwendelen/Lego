@@ -17,7 +17,7 @@ using namespace OVR;
 int main() {
     Scene scene;
     InputManager inputManager;
-    Renderer renderer;
+    Renderer renderer{true};
     lego::Game game {scene, renderer, inputManager};
 
     engine::Engine engine {renderer, inputManager, scene, game};

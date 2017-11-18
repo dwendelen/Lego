@@ -93,7 +93,10 @@ void vulkan::Context::load() {
             static_cast<uint32_t>(instanceExtensions.size()), instanceExtensions.data()
     };
     instance = createInstance(info);
-    createDebugLogging();
+
+    if(debug) {
+        createDebugLogging();
+    }
 
     selectPhysicalDevice();
     selectQueueFamilyIndex();
@@ -136,8 +139,10 @@ vulkan::Context::~Context() {
     if(device) {
         device.destroy();
     }
-    if (instance) {
+    if(debugReportCallback) {
         instance.destroyDebugReportCallbackEXT(debugReportCallback);
+    }
+    if (instance) {
         instance.destroy();
     }
 }

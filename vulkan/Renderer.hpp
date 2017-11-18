@@ -20,6 +20,8 @@ namespace vulkan {
 
     class Renderer : public engine::RenderingEngine {
     private:
+        bool debug;
+
         std::unique_ptr<Context> context;
         std::unique_ptr<Display> display;
         vk::Queue queue;
@@ -41,6 +43,9 @@ namespace vulkan {
         vk::Semaphore renderingDone;
         vk::Fence renderingDoneFence;
     public:
+        Renderer(bool debug)
+                : debug(debug)
+                {}
         void init() override;
         void render(engine::Scene& scene) override;
         void loadModel(engine::Model& model) override;

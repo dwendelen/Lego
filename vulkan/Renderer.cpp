@@ -39,13 +39,17 @@ void vulkan::Renderer::init() {
 #ifdef VK_USE_PLATFORM_WIN32_KHR
             VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #endif
-            VK_KHR_SURFACE_EXTENSION_NAME,
-            VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+            VK_KHR_SURFACE_EXTENSION_NAME
     };
-    vector<char const *> layers{"VK_LAYER_LUNARG_standard_validation"};
+    vector<char const *> layers {};
     vector<char const *> deviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-    context = unique_ptr<Context>{new Context(layers, instanceExtensions, deviceExtensions)};
+    if(debug) {
+        instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        layers.push_back("VK_LAYER_LUNARG_standard_validation");
+    }
+
+    context = unique_ptr<Context>{new Context(layers, instanceExtensions, deviceExtensions, debug)};
     context->load();
 
     Instance instance = context->getInstance();
@@ -183,6 +187,8 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
 
+    auto cpu_s = std::chrono::high_resolution_clock::now();
+
     device.resetCommandPool(commandPool, {});
     device.resetDescriptorPool(descriptorPool);
 
@@ -233,6 +239,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     writeDescriptor10.descriptorType = DescriptorType::eUniformBuffer;
     writeDescriptor10.pBufferInfo = &bufferInfo1;
 
+    auto preUpdate = std::chrono::high_resolution_clock::now();
     device.updateDescriptorSets(
             vector<WriteDescriptorSet>{
                     writeDescriptor00,
@@ -240,6 +247,9 @@ void vulkan::Renderer::render(engine::Scene& scene) {
             },
             {}
     );
+    auto postUpdate = std::chrono::high_resolution_clock::now();
+
+    cout << "updateSet: " << chrono::duration <double, milli> (postUpdate - preUpdate).count() << endl;
 
 
     ClearValue clearValues[2];
@@ -265,6 +275,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline0());
 
     //TODO fix access to objects
+    auto preloop = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < scene.placedObjects.size(); i++) {
         auto object = *scene.placedObjects[i];
         ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
@@ -276,12 +287,17 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                          {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
-        commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
-        commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
+        if(i == 0) {
+            commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
+            commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
+        }
 
         uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
         commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
     }
+    auto postloop = std::chrono::high_resolution_clock::now();
+    cout << "loop: " << chrono::duration <double, milli> (postloop - preloop).count() << endl;
+
 
     memoryManager->updateControllingObject(*scene.controllingObject);
 
