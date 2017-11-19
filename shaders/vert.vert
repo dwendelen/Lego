@@ -7,7 +7,6 @@ layout(location = 1) in vec3 normal;
 out vec4 normalO;
 out vec4 baseColor;
 
-#ifdef VULKAN
 layout(std140, set=0, binding=0) uniform Matrices {
     mat4 m;
     mat4 rot;
@@ -17,17 +16,6 @@ layout(std140, set=0, binding=0) uniform Matrices {
 layout(std140, set=1, binding=0) uniform PV {
     mat4 pv;
 } pv;
-#else
-layout(std140, binding=0) uniform Matrices {
-    mat4 m;
-    mat4 rot;
-    vec4 color;
-} uni;
-
-layout(std140, binding=1) uniform PV {
-    mat4 pv;
-} pv;
-#endif
 
 void main() {
     mat4 pvm = pv.pv * uni.m;
