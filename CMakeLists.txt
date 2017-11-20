@@ -5,7 +5,7 @@ project(Lego)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS -std=c++11)
-set(CMAKE_CXX_FLAGS_DEBUG "-DLEGO_DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLEGO_DEBUG")
 
 find_package(SDL2 REQUIRED)
 find_package(Vulkan QUIET)
@@ -29,7 +29,7 @@ set(LEGO_SRC
         lego/TriangleModel.hpp
         lego/Game.cpp lego/Game.hpp
         lego/GameInputMapping.cpp lego/GameInputMapping.hpp
-)
+        lego/BrickCache.cpp lego/BrickCache.hpp)
 
 if (Vulkan_FOUND)
     find_package(X11_XCB REQUIRED)

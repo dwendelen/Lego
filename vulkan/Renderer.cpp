@@ -344,8 +344,11 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     queue.submit(submitInfo, renderingDoneFence);
 
     display->display(renderingDone, imageIdx);
-
+    auto r1 = std::chrono::high_resolution_clock::now();
     device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
+    auto r2 = std::chrono::high_resolution_clock::now();
+    cout << "GPU " << std::chrono::duration<double, milli>(r2 - r1).count() << endl;
+
 }
 
 vulkan::Renderer::~Renderer() {

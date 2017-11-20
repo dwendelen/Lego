@@ -9,6 +9,7 @@
 #include "../engine/InputManager.hpp"
 #include "GameInputMapping.hpp"
 #include "BrickModel.hpp"
+#include "BrickCache.hpp"
 
 namespace engine {
     class Scene;
@@ -18,10 +19,6 @@ namespace engine {
 
 namespace lego {
     class Game {
-    private:
-        bool running;
-        OVR::Vector3f pseudoPosition;
-        OVR::Vector3f velocity;
     public:
         Game(engine::Scene& scene,
              engine::RenderingEngine& renderingEngine,
@@ -30,9 +27,8 @@ namespace lego {
                 : renderingEngine(renderingEngine),
                   scene(scene),
                   inputManager(inputManager),
-                  brick{4,2,3},
-                  brick2 {2,2,3},
-                  running(true)
+                  running(true),
+                  brickCache(renderingEngine)
         {
             inputMapping = std::unique_ptr<GameInputMapping> (new GameInputMapping(*this));
         }
@@ -58,8 +54,11 @@ namespace lego {
 
         std::unique_ptr<GameInputMapping> inputMapping;
 
-        lego::BrickModel brick;
-        lego::BrickModel brick2;
+        BrickCache brickCache;
+
+        bool running;
+        OVR::Vector3f pseudoPosition;
+        OVR::Vector3f velocity;
 
         void move(OVR::Vector3f translation);
     };

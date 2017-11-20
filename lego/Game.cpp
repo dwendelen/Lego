@@ -33,18 +33,15 @@ const vector<Vector3f> colors = {
 void lego::Game::init() {
     std::cout << "Hello, World!" << std::endl;
 
-    brick.init();
-    brick2.init();
-
-    renderingEngine.loadModel(brick);
-    renderingEngine.loadModel(brick2);
+    BrickModel& brick = brickCache.getBrick(4, 2, 3);
+    BrickModel& brick2 = brickCache.getBrick(4, 2, 3);
 
     auto orientation = Quatf(0.0f, 0.0f, 0.0f, 1.0f);
-    for(int i = 0; i < 250; i++) {
-        std::unique_ptr<engine::Object> object  = unique_ptr<Object>{new Object {brick, Vector3f{-0.032f,-0.2f,-0.2f}, orientation, Vector3f{1.0f,1.0f,1.0f}}};
-        renderingEngine.loadObject(*object);
-        scene.placedObjects.push_back(std::move(object));
-    }
+    //for(int i = 0; i < 250; i++) {
+    //    std::unique_ptr<engine::Object> object  = unique_ptr<Object>{new Object {brick, Vector3f{-0.032f,-0.2f,-0.2f}, orientation, Vector3f{1.0f,1.0f,1.0f}}};
+    //    renderingEngine.loadObject(*object);
+    //    scene.placedObjects.push_back(std::move(object));
+    //}
     //std::unique_ptr<engine::Object> object2  = unique_ptr<Object>{new Object {brick2, Vector3f{0.0f,-0.2f,-0.216f}, orientation, Vector3f{1.0f,0.0f,0.0f}}};
     //renderingEngine.loadObject(*object2);
     //scene.placedObjects.push_back(std::move(object2));
@@ -52,7 +49,6 @@ void lego::Game::init() {
     std::unique_ptr<engine::Object> transparentBrick = unique_ptr<Object> {new Object{brick, Vector3f{0.0f, -0.2f, -0.2f}, orientation, Vector3f{1.0f, 1.0f, 1.0f}}};
     renderingEngine.loadObject(*transparentBrick);
     scene.controllingObject = std::move(transparentBrick);
-
 
     inputManager.setMapping(*inputMapping);
 }
