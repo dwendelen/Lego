@@ -3,6 +3,7 @@
 //
 
 #include "BrickModel.hpp"
+#include "GridUtil.hpp"
 
 using namespace OVR;
 using namespace std;
@@ -17,76 +18,77 @@ void lego::BrickModel::init() {
     float stubRadius =		0.0024f;
     float stubHeight =		0.0018f;
 
-    float x = nbOfStubsX * halfLengthStub - edgePenalty;
-    float y = height * heightBlock;
-    float z = nbOfStubsZ * halfLengthStub - edgePenalty;
+    float x = nbOfStubsX * lego::GridUtil::SIZE_GRID;
+    float y = height * lego::GridUtil::HEIGHT_GRID;
+    float z = nbOfStubsZ * lego::GridUtil::SIZE_GRID;
 
-    float xInner = x - 0.0012f;
+    float thickness = 0.0012f;
+    float xInner = x - thickness;
     float yInner = y - 0.0010f;
-    float zInner = z - 0.0012f;
+    float zInner = z - thickness;
 
     vertices = {
             //Front
-            Vector3f(-x, y,  z), Vector3f(0, 0,  1.0f), //0
-            Vector3f( x, y,  z), Vector3f(0, 0,  1.0f),
-            Vector3f( x, 0,  z), Vector3f(0, 0,  1.0f),
-            Vector3f(-x, 0,  z), Vector3f(0, 0,  1.0f),
-            //Back
-            Vector3f(-x, y, -z), Vector3f(0, 0, -1.0f), //4
-            Vector3f( x, y, -z), Vector3f(0, 0, -1.0f),
-            Vector3f( x, 0, -z), Vector3f(0, 0, -1.0f),
-            Vector3f(-x, 0, -z), Vector3f(0, 0, -1.0f),
-            //Left
-            Vector3f(-x, y, -z), Vector3f(-1.0f, 0, 0), //8
-            Vector3f(-x, y,  z), Vector3f(-1.0f, 0, 0),
-            Vector3f(-x, 0,  z), Vector3f(-1.0f, 0, 0),
-            Vector3f(-x, 0, -z), Vector3f(-1.0f, 0, 0),
+            Vector3f(0, y,  0), Vector3f( 0.0f,  0.0f,  1.0f), //0
+            Vector3f(x, y,  0), Vector3f( 0.0f,  0.0f,  1.0f),
+            Vector3f(x, 0,  0), Vector3f( 0.0f,  0.0f,  1.0f),
+            Vector3f(0, 0,  0), Vector3f( 0.0f,  0.0f,  1.0f),
+            //Back                                 
+            Vector3f(0, y, -z), Vector3f( 0.0f,  0.0f, -1.0f), //4
+            Vector3f(x, y, -z), Vector3f( 0.0f,  0.0f, -1.0f),
+            Vector3f(x, 0, -z), Vector3f( 0.0f,  0.0f, -1.0f),
+            Vector3f(0, 0, -z), Vector3f( 0.0f,  0.0f, -1.0f),
+            //Left                                 
+            Vector3f(0, y, -z), Vector3f(-1.0f,  0.0f,  0.0f), //8
+            Vector3f(0, y,  0), Vector3f(-1.0f,  0.0f,  0.0f),
+            Vector3f(0, 0,  0), Vector3f(-1.0f,  0.0f,  0.0f),
+            Vector3f(0, 0, -z), Vector3f(-1.0f,  0.0f,  0.0f),
             //Top
-            Vector3f(-x, y, -z), Vector3f(0,  1.0f, 0), //12
-            Vector3f( x, y, -z), Vector3f(0,  1.0f, 0),
-            Vector3f( x, y,  z), Vector3f(0,  1.0f, 0),
-            Vector3f(-x, y,  z), Vector3f(0,  1.0f, 0),
+            Vector3f(0, y, -z), Vector3f( 0.0f,  1.0f,  0.0f), //12
+            Vector3f(x, y, -z), Vector3f( 0.0f,  1.0f,  0.0f),
+            Vector3f(x, y,  0), Vector3f( 0.0f,  1.0f,  0.0f),
+            Vector3f(0, y,  0), Vector3f( 0.0f,  1.0f,  0.0f),
             //Right
-            Vector3f( x, y,  z), Vector3f( 1.0f, 0, 0), //16
-            Vector3f( x, y, -z), Vector3f( 1.0f, 0, 0),
-            Vector3f( x, 0, -z), Vector3f( 1.0f, 0, 0),
-            Vector3f( x, 0,  z), Vector3f( 1.0f, 0, 0),
+            Vector3f(x, y,  0), Vector3f( 1.0f,  0.0f,  0.0f), //16
+            Vector3f(x, y, -z), Vector3f( 1.0f,  0.0f,  0.0f),
+            Vector3f(x, 0, -z), Vector3f( 1.0f,  0.0f,  0.0f),
+            Vector3f(x, 0,  0), Vector3f( 1.0f,  0.0f,  0.0f),
 
             //Bottom
-            Vector3f(-x     , 0     ,  z     ), Vector3f(0, -1.0f, 0), //20
-            Vector3f(-xInner, 0     ,  zInner), Vector3f(0, -1.0f, 0),
-            Vector3f(-xInner, 0     , -zInner), Vector3f(0, -1.0f, 0),
-            Vector3f(-x     , 0     ,  -z    ), Vector3f(0, -1.0f, 0),
-            Vector3f( x     , 0     ,  z     ), Vector3f(0, -1.0f, 0), //24
-            Vector3f( xInner, 0     ,  zInner), Vector3f(0, -1.0f, 0),
-            Vector3f( xInner, 0     , -zInner), Vector3f(0, -1.0f, 0),
-            Vector3f( x     , 0     ,  -z    ), Vector3f(0, -1.0f, 0),
+            Vector3f(        0,      0,          0), Vector3f( 0.0f, -1.0f,  0.0f), //20
+            Vector3f(thickness,      0,    -thickness), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(thickness,      0, -zInner), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(        0,      0,         -z), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(        x,      0,          0), Vector3f( 0.0f, -1.0f,  0.0f), //24
+            Vector3f(   xInner,      0,    -thickness), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(   xInner,      0, -zInner), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(        x,      0,         -z), Vector3f( 0.0f, -1.0f,  0.0f),
 
             //Inner Front
-            Vector3f(-xInner, yInner,  zInner), Vector3f(0, 0, -1.0f), //28
-            Vector3f( xInner, yInner,  zInner), Vector3f(0, 0, -1.0f),
-            Vector3f( xInner, 0     ,  zInner), Vector3f(0, 0, -1.0f),
-            Vector3f(-xInner, 0     ,  zInner), Vector3f(0, 0, -1.0f),
+            Vector3f(thickness, yInner,    -thickness), Vector3f( 0.0f,  0.0f, -1.0f), //28
+            Vector3f(   xInner, yInner,    -thickness), Vector3f( 0.0f,  0.0f, -1.0f),
+            Vector3f(   xInner,      0,    -thickness), Vector3f( 0.0f,  0.0f, -1.0f),
+            Vector3f(thickness,      0,    -thickness), Vector3f( 0.0f,  0.0f, -1.0f),
             //Inner Back
-            Vector3f(-xInner, yInner, -zInner), Vector3f(0, 0,  1.0f), //32
-            Vector3f( xInner, yInner, -zInner), Vector3f(0, 0,  1.0f),
-            Vector3f( xInner, 0     , -zInner), Vector3f(0, 0,  1.0f),
-            Vector3f(-xInner, 0     , -zInner), Vector3f(0, 0,  1.0f),
+            Vector3f(thickness, yInner, -zInner), Vector3f( 0.0f,  0.0f,  1.0f), //32
+            Vector3f(   xInner, yInner, -zInner), Vector3f( 0.0f,  0.0f,  1.0f),
+            Vector3f(   xInner,      0, -zInner), Vector3f( 0.0f,  0.0f,  1.0f),
+            Vector3f(thickness,      0, -zInner), Vector3f( 0.0f,  0.0f,  1.0f),
             //Inner Left
-            Vector3f(-xInner, yInner, -zInner), Vector3f( 1.0f, 0, 0), //36
-            Vector3f(-xInner, yInner,  zInner), Vector3f( 1.0f, 0, 0),
-            Vector3f(-xInner, 0     ,  zInner), Vector3f( 1.0f, 0, 0),
-            Vector3f(-xInner, 0     , -zInner), Vector3f( 1.0f, 0, 0),
+            Vector3f(thickness, yInner, -zInner), Vector3f( 1.0f,  0.0f,  0.0f), //36
+            Vector3f(thickness, yInner,    -thickness), Vector3f( 1.0f,  0.0f,  0.0f),
+            Vector3f(thickness,      0,    -thickness), Vector3f( 1.0f,  0.0f,  0.0f),
+            Vector3f(thickness,      0, -zInner), Vector3f( 1.0f,  0.0f,  0.0f),
             //Inner Top
-            Vector3f(-xInner, yInner, -zInner), Vector3f(0, -1.0f, 0), //40
-            Vector3f( xInner, yInner, -zInner), Vector3f(0, -1.0f, 0),
-            Vector3f( xInner, yInner,  zInner), Vector3f(0, -1.0f, 0),
-            Vector3f(-xInner, yInner,  zInner), Vector3f(0, -1.0f, 0),
+            Vector3f(thickness, yInner, -zInner), Vector3f( 0.0f, -1.0f,  0.0f), //40
+            Vector3f(   xInner, yInner, -zInner), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(   xInner, yInner,    -thickness), Vector3f( 0.0f, -1.0f,  0.0f),
+            Vector3f(thickness, yInner,    -thickness), Vector3f( 0.0f, -1.0f,  0.0f),
             //Inner Right
-            Vector3f( xInner, yInner,  zInner), Vector3f(-1.0f, 0, 0), //44
-            Vector3f( xInner, yInner, -zInner), Vector3f(-1.0f, 0, 0),
-            Vector3f( xInner, 0     , -zInner), Vector3f(-1.0f, 0, 0),
-            Vector3f( xInner, 0     ,  zInner), Vector3f(-1.0f, 0, 0),
+            Vector3f(   xInner, yInner,    -thickness), Vector3f(-1.0f,  0.0f,  0.0f), //44
+            Vector3f(   xInner, yInner, -zInner), Vector3f(-1.0f,  0.0f,  0.0f),
+            Vector3f(   xInner,      0, -zInner), Vector3f(-1.0f,  0.0f,  0.0f),
+            Vector3f(   xInner,      0,    -thickness), Vector3f(-1.0f,  0.0f,  0.0f),
     };
 
     indices = {
@@ -124,22 +126,22 @@ void lego::BrickModel::init() {
 
 
 
-    float centerX = -(nbOfStubsX - 1 ) * halfLengthStub;
+    float centerX = halfLengthStub;
     for(int ix = 0; ix < nbOfStubsX; ix++) {
-        float centerZ = -(nbOfStubsZ - 1 ) * halfLengthStub;
+        float centerZ = -halfLengthStub;
         for(int iz = 0; iz < nbOfStubsZ; iz++) {
             addStubs(16, Vector3f(centerX, y, centerZ), stubRadius, stubHeight, vertices, indices);
-            centerZ += 2*halfLengthStub;
+            centerZ -= 2*halfLengthStub;
         }
         centerX += 2*halfLengthStub;
     }
 
-    centerX = -(nbOfStubsX - 2 ) * halfLengthStub;
+    centerX = 2 * halfLengthStub;
     for(int ix = 0; ix < nbOfStubsX - 1; ix++) {
-        float centerZ = -(nbOfStubsZ - 2 ) * halfLengthStub;
+        float centerZ = -2*halfLengthStub;
         for(int iz = 0; iz < nbOfStubsZ - 1; iz++) {
             addHollowCilinders(16, Vector3f(centerX, 0, centerZ), 0.0024f, 0.003255f, yInner, vertices, indices);
-            centerZ += 2*halfLengthStub;
+            centerZ -= 2*halfLengthStub;
         }
         centerX += 2*halfLengthStub;
     }
