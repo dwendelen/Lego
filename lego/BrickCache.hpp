@@ -32,7 +32,7 @@ namespace lego {
     class BrickCache {
     public:
         explicit BrickCache(engine::RenderingEngine& renderingEngine);
-        BrickModel &getBrick(uint32_t width, uint32_t depth, uint32_t height);
+        BrickModel *getBrick(uint32_t width, uint32_t depth, uint32_t height);
 
     private:
         engine::RenderingEngine& renderingEngine;

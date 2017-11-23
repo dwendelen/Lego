@@ -7,9 +7,10 @@
 
 #include <memory>
 #include "../engine/InputManager.hpp"
-#include "GameInputMapping.hpp"
+#include "ControlBrickInputMapping.hpp"
 #include "BrickModel.hpp"
 #include "BrickCache.hpp"
+#include "ChangeModelInputMapping.hpp"
 
 namespace engine {
     class Scene;
@@ -30,7 +31,8 @@ namespace lego {
                   running(true),
                   brickCache(renderingEngine)
         {
-            inputMapping = std::unique_ptr<GameInputMapping> (new GameInputMapping(*this));
+            controllBrickInputMapping = std::unique_ptr<ControlBrickInputMapping> (new ControlBrickInputMapping(*this));
+            changeModelInputMapping = std::unique_ptr<ChangeModelInputMapping> (new ChangeModelInputMapping(*this));
         }
 
         void init();
@@ -43,22 +45,31 @@ namespace lego {
         void moveUnit(OVR::Vector3i translation);
         void rotate(OVR::Quatf rotation);
         void setVelocity(OVR::Vector3f velocity);
+        void setModelVelocity(OVR::Vector3f velocity);
         void quit() {
             running = false;
         }
+        void changeBrick();
+
+        void controlBrick();
 
     private:
         engine::Scene& scene;
         engine::RenderingEngine& renderingEngine;
         engine::InputManager& inputManager;
 
-        std::unique_ptr<GameInputMapping> inputMapping;
+        std::unique_ptr<ControlBrickInputMapping> controllBrickInputMapping;
+        std::unique_ptr<ChangeModelInputMapping> changeModelInputMapping;
 
         BrickCache brickCache;
 
         bool running;
         OVR::Vector3f pseudoPosition;
         OVR::Vector3f velocity;
+
+        OVR::Vector3f brickDimensions;
+        BrickDimension currentBrickDimensions;
+        OVR::Vector3f modelVelocity;
 
         void move(OVR::Vector3f translation);
     };

@@ -278,7 +278,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     auto preloop = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < scene.placedObjects.size(); i++) {
         auto object = *scene.placedObjects[i];
-        ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
+        ModelData* modelData = static_cast<ModelData *>(object.model->renderData);
         ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
 
         DeviceSize offsetIndices = modelData->indexOffset;
@@ -287,12 +287,11 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                          {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
-        if(i == 0) {
-            commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
-            commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
-        }
+        commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
+        commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
 
-        uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
+
+        uint32_t nbOfIndices = static_cast<uint32_t>(object.model->getIndices().size() * 3);
         commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
     }
     auto postloop = std::chrono::high_resolution_clock::now();
@@ -305,14 +304,14 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
 
     auto object = *scene.controllingObject;
-    ModelData* modelData = static_cast<ModelData *>(object.getModel().renderData);
+    ModelData* modelData = static_cast<ModelData *>(object.model->renderData);
     ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
 
     DeviceSize offsetIndices = modelData->indexOffset;
     DeviceSize offsetVertices = modelData->vertexOffset;
     DeviceSize offsetUniform = objectData->dataOffset;
 
-    uint32_t nbOfIndices = static_cast<uint32_t>(object.getModel().getIndices().size() * 3);
+    uint32_t nbOfIndices = static_cast<uint32_t>(object.model->getIndices().size() * 3);
 
     commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                      {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
@@ -345,7 +344,10 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     display->display(renderingDone, imageIdx);
     auto r1 = std::chrono::high_resolution_clock::now();
-    device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
+    Result result = device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
+    if(result == Result::eTimeout) {
+        throw runtime_error("Device blocked");
+    }
     auto r2 = std::chrono::high_resolution_clock::now();
     cout << "GPU " << std::chrono::duration<double, milli>(r2 - r1).count() << endl;
 

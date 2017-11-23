@@ -10,10 +10,8 @@
 namespace engine {
     class Model;
     class Object {
-    private:
-        Model& model;
     public:
-        Object(   Model& model
+        Object(   Model* model
                 , OVR::Vector3f position
                 , OVR::Quatf orientation
                 , OVR::Vector3f color
@@ -28,11 +26,8 @@ namespace engine {
         OVR::Quatf orientation;
         OVR::Vector3f color;
 
-        void* renderData;
-
-        Model& getModel() const {
-            return model;
-        }
+        void* renderData = nullptr;
+        Model* model;
     };
 }
 

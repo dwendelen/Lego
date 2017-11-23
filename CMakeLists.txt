@@ -28,8 +28,8 @@ set(LEGO_SRC
         lego/BrickModel.cpp lego/BrickModel.hpp
         lego/TriangleModel.hpp
         lego/Game.cpp lego/Game.hpp
-        lego/GameInputMapping.cpp lego/GameInputMapping.hpp
-        lego/BrickCache.cpp lego/BrickCache.hpp)
+        lego/ControlBrickInputMapping.cpp lego/ControlBrickInputMapping.hpp
+        lego/BrickCache.cpp lego/BrickCache.hpp lego/ChangeModelInputMapping.cpp lego/ChangeModelInputMapping.hpp lego/ControlBrick.cpp lego/ControlBrick.hpp lego/GridUtil.hpp)
 
 if (Vulkan_FOUND)
     find_package(X11_XCB REQUIRED)

@@ -2,6 +2,7 @@
 // Created by xtrit on 28/10/17.
 //
 
+#include <iostream>
 #include "MemoryManager.hpp"
 #include "../engine/Object.hpp"
 #include "../engine/Model.hpp"
@@ -169,8 +170,18 @@ void vulkan::MemoryManager::loadModel(engine::Model& model) {
 
     DeviceSize sizeBoth = sizeVertices + sizeIndices;
 
+    std::cout << "Loading model with " << model.getVerticesWithNormal().size()  << " vertices and " << model.getIndices().size() << " indices" << endl;
+
+
     DeviceSize offsetVertices = modelOffset;
     DeviceSize offsetIndices = offsetVertices + sizeVertices;
+
+    if(offsetIndices + sizeIndices > 256 * 1024 * 1024) {
+        runtime_error("Not enough model memory");
+    }
+
+    std::cout << "Offsets " << offsetVertices << " and " << offsetIndices << endl;
+
 
     uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(modelMemory, modelOffset, sizeBoth));
     memcpy(writeLocation, model.getVerticesWithNormal().data(), sizeVertices);
@@ -207,8 +218,6 @@ DeviceSize vulkan::MemoryManager::allocateBlock(vk::DeviceSize size) {
 
 
 void vulkan::MemoryManager::loadObject(engine::Object& object) {
-
-
     Matrix4<float> orientation = Matrix4f(object.orientation);
     Matrix4f model = Matrix4f::Translation(object.position) * orientation;
 

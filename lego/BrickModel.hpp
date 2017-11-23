@@ -5,6 +5,7 @@
 #ifndef LEGO_BRICKMODEL_HPP
 #define LEGO_BRICKMODEL_HPP
 
+#include <iostream>
 #include "../engine/Model.hpp"
 
 namespace lego {
@@ -27,7 +28,9 @@ namespace lego {
 
         virtual std::vector <Vector3ui> getIndices() { return indices; }
 
-        virtual ~BrickModel() = default;
+        virtual ~BrickModel() {
+            std::cerr << "Model destroyed!" << std::endl;
+        };
     };
 }
 

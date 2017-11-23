@@ -11,7 +11,7 @@ lego::BrickCache::BrickCache(engine::RenderingEngine& renderingEngine):
         renderingEngine(renderingEngine)
 {}
 
-lego::BrickModel &lego::BrickCache::getBrick(uint32_t width, uint32_t depth, uint32_t height) {
+lego::BrickModel *lego::BrickCache::getBrick(uint32_t width, uint32_t depth, uint32_t height) {
     BrickDimension dim{};
     dim.height = height;
     dim.depth = depth;
@@ -20,16 +20,16 @@ lego::BrickModel &lego::BrickCache::getBrick(uint32_t width, uint32_t depth, uin
     auto find = bricks.find(dim);
     if (find == bricks.end()) {
         std::unique_ptr<BrickModel> newModel = std::unique_ptr<BrickModel>(new BrickModel(width, depth, height));
-        BrickModel& modelRef = *newModel;
+        BrickModel* modelRef = newModel.get();
         bricks.emplace(dim, std::move(newModel));
 
-        modelRef.init();
-        renderingEngine.loadModel(modelRef);
+        modelRef->init();
+        renderingEngine.loadModel(*modelRef);
 
         return modelRef;
     }
 
-    return *find->second;
+    return find->second.get();
 }
 
 size_t lego::BrickDimension::hash(lego::BrickDimension dim) {

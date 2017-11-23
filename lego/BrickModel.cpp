@@ -146,6 +146,8 @@ void lego::BrickModel::init() {
 }
 
 void addStubs(int nbOfSegments, Vector3f center, float radius, float height, vector<Vector3f>& vertices, vector<Vector3ui>& indices) {
+    std::cout << "Stub " << center.x << ", " << center.y <<", " <<center.z << endl;
+
     uint32_t firstIndex = vertices.size() / 2;
 
     float y0 = center.y;
