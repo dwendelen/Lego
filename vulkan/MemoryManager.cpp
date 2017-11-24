@@ -57,48 +57,56 @@ vk::DeviceMemory vulkan::MemoryManager::allocateMemory(vk::Buffer buffer, Memory
     return memory;
 }
 
+vulkan::Memory vulkan::MemoryManager::createMemory(BufferUsageFlags bufferUsageFlags, DeviceSize size, vk::MemoryPropertyFlags requiredProperties) {
+    BufferCreateInfo bufferCreateInfo;
+    bufferCreateInfo.size = size;
+    bufferCreateInfo.sharingMode = SharingMode::eExclusive;
+    bufferCreateInfo.usage = bufferUsageFlags;
+
+    Buffer buffer = device.createBuffer(bufferCreateInfo);
+    DeviceMemory deviceMemory = allocateMemory(buffer, requiredProperties);
+    
+    Memory memory{};
+    memory.size = size;
+    memory.used = 0;
+    memory.buffer = buffer;
+    memory.memory = deviceMemory;
+
+    return memory;
+}
+
+
 
 void vulkan::MemoryManager::init() {
-    MemoryPropertyFlags requiredProperties
+    MemoryPropertyFlags hostRequirements
             = MemoryPropertyFlags()
               | MemoryPropertyFlagBits::eHostVisible
               | MemoryPropertyFlagBits::eHostCoherent;
-
-    BufferCreateInfo createModelInfo;
-    createModelInfo.size = 256 * 1024 * 1024;
-    createModelInfo.sharingMode = SharingMode::eExclusive;
-    createModelInfo.usage = BufferUsageFlags()
-                            | BufferUsageFlagBits::eVertexBuffer
-                            | BufferUsageFlagBits::eIndexBuffer;
+    MemoryPropertyFlags deviceRequirements
+            = MemoryPropertyFlagBits::eDeviceLocal;
     
-    this->modelBuffer = device.createBuffer(createModelInfo);
-    this->modelMemory = allocateMemory(this->modelBuffer, requiredProperties);
+    
+    BufferUsageFlags modelBufferUsage
+            = BufferUsageFlags()
+                | BufferUsageFlagBits::eVertexBuffer
+                | BufferUsageFlagBits::eIndexBuffer;
+    BufferUsageFlagBits objectBufferUsage
+            = BufferUsageFlagBits::eUniformBuffer;
+    BufferUsageFlagBits pvBufferUsage
+            = BufferUsageFlagBits::eUniformBuffer;
+
+    DeviceSize modelBufferSize = 256 * 1024 * 1024;
+    DeviceSize objectBufferSize = physicalDevice.getProperties().limits.maxUniformBufferRange;
+    DeviceSize pvBufferSize = max(physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment, sizeof(Matrix4f));
 
 
-    BufferCreateInfo createObjectInfo;
-    createObjectInfo.size = physicalDevice.getProperties().limits.maxUniformBufferRange;
-    createObjectInfo.sharingMode = SharingMode::eExclusive;
-    createObjectInfo.usage = BufferUsageFlagBits::eUniformBuffer;
+    this->modelMemory = createMemory(modelBufferUsage | BufferUsageFlagBits::eTransferDst, modelBufferSize, deviceRequirements);
+    this->modelStagingMemory = createMemory(modelBufferUsage | BufferUsageFlagBits::eTransferSrc, modelBufferSize, hostRequirements);
+    this->objectMemory = createMemory(objectBufferUsage, objectBufferSize, hostRequirements);
+    this->pvMemory = createMemory(pvBufferUsage, pvBufferSize, hostRequirements);
+    
 
-    this->objectBuffer = device.createBuffer(createObjectInfo);
-    this->objectMemory = this->allocateMemory(this->objectBuffer, requiredProperties);
-
-    MemoryBlock firstBlock{};
-    firstBlock.size = createObjectInfo.size;
-    firstBlock.offset = 0;
-
-    this->freeObjectMemory.push_back(firstBlock);
-
-    //TODO FIX
-    pvSize = physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment;
-    BufferCreateInfo createPvInfo;
-    createPvInfo.size = pvSize;
-    createPvInfo.sharingMode = SharingMode::eExclusive;
-    createPvInfo.usage = BufferUsageFlagBits::eUniformBuffer;
-
-    this->pvBuffer = device.createBuffer(createPvInfo);
-    this->pvMemory = this->allocateMemory(pvBuffer, requiredProperties);
-
+//TODO FIX
     Vector3f x = Vector3f(1.0f,  0.0f,  0.0f); // Right
     Vector3f y = Vector3f(0.0f, -1.0f,  0.0f);
     Vector3f z = Vector3f(0.0f,  0.0f, -1.0f);  // Forward
@@ -127,10 +135,9 @@ void vulkan::MemoryManager::init() {
 
     Matrix4f data = pv.Transposed();
 
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(pvMemory, 0, pvSize));
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(pvMemory.memory, 0, pvMemory.size));
     memcpy(writeLocation, &data, sizeof(data));
-    device.unmapMemory(pvMemory);
-
+    device.unmapMemory(pvMemory.memory);
 }
 
 
@@ -170,25 +177,21 @@ void vulkan::MemoryManager::loadModel(engine::Model& model) {
 
     DeviceSize sizeBoth = sizeVertices + sizeIndices;
 
-    std::cout << "Loading model with " << model.getVerticesWithNormal().size()  << " vertices and " << model.getIndices().size() << " indices" << endl;
 
-
-    DeviceSize offsetVertices = modelOffset;
+    DeviceSize offsetVertices = modelStagingMemory.used;
     DeviceSize offsetIndices = offsetVertices + sizeVertices;
+    DeviceSize newUsed = offsetIndices + sizeIndices;
 
-    if(offsetIndices + sizeIndices > 256 * 1024 * 1024) {
-        runtime_error("Not enough model memory");
+    if(newUsed > modelStagingMemory.size) {
+        throw runtime_error("Not enough model memory");
     }
 
-    std::cout << "Offsets " << offsetVertices << " and " << offsetIndices << endl;
-
-
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(modelMemory, modelOffset, sizeBoth));
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(modelStagingMemory.memory, modelStagingMemory.used, sizeBoth));
     memcpy(writeLocation, model.getVerticesWithNormal().data(), sizeVertices);
     memcpy(writeLocation + sizeVertices, model.getIndices().data(), sizeIndices);
-    device.unmapMemory(modelMemory);
+    device.unmapMemory(modelStagingMemory.memory);
 
-    modelOffset += sizeBoth;
+    modelStagingMemory.used = newUsed;
 
     //TODO Cleanup model data
     ModelData* modelData = new ModelData{};
@@ -200,20 +203,6 @@ void vulkan::MemoryManager::loadModel(engine::Model& model) {
 
 void vulkan::MemoryManager::loadCamera(engine::Camera& camera) {
 
-}
-
-DeviceSize vulkan::MemoryManager::allocateBlock(vk::DeviceSize size) {
-    for(auto i = 0; i < freeObjectMemory.size(); i++) {
-        if(freeObjectMemory[i].size >= size) {
-            DeviceSize offset = freeObjectMemory[i].offset;
-            freeObjectMemory[i].offset += size;
-            freeObjectMemory[i].size -= size;
-
-            return offset;
-        }
-    }
-
-    throw runtime_error("Not enough memory for an extra object");
 }
 
 
@@ -230,16 +219,21 @@ void vulkan::MemoryManager::loadObject(engine::Object& object) {
     DeviceSize sizeData = sizeof(data);
     DeviceSize alignedSize = align(sizeData, physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
 
-    DeviceSize offset = allocateBlock(alignedSize);
+    DeviceSize newUsed = objectMemory.used + alignedSize;
 
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory, offset, alignedSize));
+    if(newUsed > objectMemory.size) {
+        throw runtime_error("Not enough object memory");
+    }
+
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory.memory, objectMemory.used, alignedSize));
     memcpy(writeLocation, &data, sizeData);
-    device.unmapMemory(objectMemory);
+    device.unmapMemory(objectMemory.memory);
 
     ObjectData* objectData = new ObjectData{};
-    objectData->dataOffset = offset;
-
+    objectData->dataOffset = objectMemory.used;
     object.renderData = objectData;
+
+    objectMemory.used = newUsed;
 }
 
 void vulkan::MemoryManager::updateControllingObject(engine::Object &controllingObject) {
@@ -258,9 +252,37 @@ void vulkan::MemoryManager::updateControllingObject(engine::Object &controllingO
     DeviceSize alignedSize = align(sizeData, physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
 
 
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory, objectData->dataOffset, alignedSize));
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory.memory, objectData->dataOffset, alignedSize));
     memcpy(writeLocation, &data, sizeData);
-    device.unmapMemory(objectMemory);
+    device.unmapMemory(objectMemory.memory);
+}
+
+
+void vulkan::MemoryManager::copyMemory(vk::CommandBuffer &commandBuffer) {
+    DeviceSize offset = modelMemory.used;
+    DeviceSize size = modelStagingMemory.used - modelMemory.used;
+
+    if(size == 0) {
+        return;
+    }
+
+    BufferCopy bufferCopy;
+    bufferCopy.srcOffset = offset;
+    bufferCopy.dstOffset = offset;
+    bufferCopy.size = size;
+
+    commandBuffer.copyBuffer(modelStagingMemory.buffer, modelMemory.buffer, {bufferCopy});
+    
+    BufferMemoryBarrier bufferMemoryBarrier;
+    bufferMemoryBarrier.buffer = modelMemory.buffer;
+    bufferMemoryBarrier.offset = offset;
+    bufferMemoryBarrier.size = size;
+    bufferMemoryBarrier.srcAccessMask = AccessFlagBits::eMemoryWrite;
+    bufferMemoryBarrier.dstAccessMask = AccessFlagBits::eIndexRead;
+    bufferMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    bufferMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+    commandBuffer.pipelineBarrier(PipelineStageFlagBits::eTransfer, PipelineStageFlagBits::eVertexInput, DependencyFlagBits::eByRegion, {}, {}, {});
 }
 
 vulkan::MemoryManager::~MemoryManager() {
@@ -268,27 +290,34 @@ vulkan::MemoryManager::~MemoryManager() {
         device.freeMemory(staticMemory);
     }
 
-    if(pvBuffer) {
-        device.destroyBuffer(pvBuffer);
+    if(pvMemory.buffer) {
+        device.destroyBuffer(pvMemory.buffer);
+    }
+    if(pvMemory.memory) {
+        device.freeMemory(pvMemory.memory);
     }
 
-    if(pvMemory) {
-        device.freeMemory(pvMemory);
-    }
-
-    if(modelBuffer) {
-        device.destroyBuffer(modelBuffer);
+    if(modelMemory.buffer) {
+        device.destroyBuffer(modelMemory.buffer);
     }
     
-    if(modelMemory) {
-        device.freeMemory(modelMemory);
+    if(modelMemory.memory) {
+        device.freeMemory(modelMemory.memory);
     }
 
-    if(objectBuffer) {
-        device.destroyBuffer(objectBuffer);
+    if(modelStagingMemory.buffer) {
+        device.destroyBuffer(modelStagingMemory.buffer);
     }
-    if(objectMemory) {
-        device.freeMemory(objectMemory);
+
+    if(modelStagingMemory.memory) {
+        device.freeMemory(modelStagingMemory.memory);
+    }
+
+    if(objectMemory.buffer) {
+        device.destroyBuffer(objectMemory.buffer);
+    }
+    if(objectMemory.memory) {
+        device.freeMemory(objectMemory.memory);
     }
 }
 

@@ -23,6 +23,13 @@ namespace vulkan {
         vk::DeviceSize offset;
         vk::DeviceSize size;
     };
+    class Memory {
+    public:
+        vk::DeviceMemory memory {};
+        vk::Buffer buffer;
+        vk::DeviceSize used = 0;
+        vk::DeviceSize size = 0;
+    };
     class MemoryManager {
     private:
         vk::PhysicalDevice physicalDevice;
@@ -30,41 +37,21 @@ namespace vulkan {
 
         vk::DeviceMemory staticMemory;
 
-        vk::DeviceMemory modelMemory;
-        vk::Buffer modelBuffer;
-        vk::DeviceSize modelBufferSize;
-        vk::DeviceSize modelOffset;
-
-        vk::DeviceMemory objectMemory;
-        vk::Buffer objectBuffer;
-        std::vector<MemoryBlock> freeObjectMemory;
-
-        vk::DeviceMemory pvMemory;
-        vk::Buffer pvBuffer;
-        vk::DeviceSize pvSize;
-
         uint32_t getMemoryType(uint32_t memoryTypeBitsRequirement, vk::MemoryPropertyFlags requiredProperties);
         vk::DeviceMemory allocateMemory(vk::Buffer buffer, vk::MemoryPropertyFlags requiredProperties);
-        vk::DeviceSize allocateBlock(vk::DeviceSize size);
+        Memory createMemory(vk::BufferUsageFlags bufferUsageFlags, vk::DeviceSize size, vk::MemoryPropertyFlags requiredProperties);
 
     public:
+        Memory modelMemory;
+        Memory modelStagingMemory;
+
+        Memory objectMemory;
+        Memory pvMemory;
+
         MemoryManager(vk::Device device, vk::PhysicalDevice physicalDevice)
                 : device(device)
                 , physicalDevice(physicalDevice)
-                , modelOffset(0)
         {}
-
-        vk::Buffer getModelBuffer() {
-            return modelBuffer;
-        }
-
-        vk::Buffer getObjectBuffer() {
-            return objectBuffer;
-        }
-
-        vk::Buffer getPvBuffer() {
-            return pvBuffer;
-        }
 
         void init();
 
@@ -77,6 +64,8 @@ namespace vulkan {
         void updateControllingObject(engine::Object& controllingObject);
 
         void loadCamera(engine::Camera& camera);
+
+        void copyMemory(vk::CommandBuffer& commandBuffer);
 
         //void unload(engine::Model<ModelData> model);
         virtual ~MemoryManager();

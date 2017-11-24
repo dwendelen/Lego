@@ -185,9 +185,15 @@ void Renderer::createOpagePipeline() {
 void vulkan::Renderer::render(engine::Scene& scene) {
     Device device = context->getDevice();
 
+    auto image_s = std::chrono::high_resolution_clock::now();
     uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
+    auto image_e = std::chrono::high_resolution_clock::now();
+
+    cout << "image: " << chrono::duration <double, milli> (image_e - image_s).count() << endl;
+
 
     auto cpu_s = std::chrono::high_resolution_clock::now();
+    auto alloc_s = std::chrono::high_resolution_clock::now();
 
     device.resetCommandPool(commandPool, {});
     device.resetDescriptorPool(descriptorPool);
@@ -208,12 +214,19 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     vector<DescriptorSet> descriptorSets = device.allocateDescriptorSets(descriptorSetAllocateInfo);
 
+    auto alloc_e = std::chrono::high_resolution_clock::now();
+    cout << "alloc " << std::chrono::duration<double, milli>(alloc_e - alloc_s).count() << endl;
+
+
+    auto renderPass_s = std::chrono::high_resolution_clock::now();
+
+
     CommandBufferBeginInfo commandBufferBeginInfo;
     commandBufferBeginInfo.flags = CommandBufferUsageFlagBits::eOneTimeSubmit;
     commandBuffer.begin(commandBufferBeginInfo);
 
     DescriptorBufferInfo bufferInfo0;
-    bufferInfo0.buffer = memoryManager->getObjectBuffer();
+    bufferInfo0.buffer = memoryManager->objectMemory.buffer;
     bufferInfo0.offset = 0;
     bufferInfo0.range = VK_WHOLE_SIZE;
 
@@ -227,7 +240,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
 
     DescriptorBufferInfo bufferInfo1;
-    bufferInfo1.buffer = memoryManager->getPvBuffer();
+    bufferInfo1.buffer = memoryManager->pvMemory.buffer;
     bufferInfo1.offset = 0;
     bufferInfo1.range = VK_WHOLE_SIZE;
 
@@ -252,6 +265,8 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     cout << "updateSet: " << chrono::duration <double, milli> (postUpdate - preUpdate).count() << endl;
 
 
+    memoryManager->copyMemory(commandBuffer);
+
     ClearValue clearValues[2];
     clearValues[0].depthStencil = ClearDepthStencilValue{1.0f, 0};
     clearValues[1].color = ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.4f, 1.0f});
@@ -270,7 +285,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 1,
                                      {descriptorSets[1]}, {});
 
-    Buffer modelBuffer = memoryManager->getModelBuffer();
+    Buffer modelBuffer = memoryManager->modelMemory.buffer;
 
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline0());
 
@@ -327,6 +342,13 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     commandBuffer.endRenderPass();
     commandBuffer.end();
 
+    auto renderPass_e = std::chrono::high_resolution_clock::now();
+    cout << "renderpass " << std::chrono::duration<double, milli>(renderPass_e - renderPass_s).count() << endl;
+
+
+    auto display_s = std::chrono::high_resolution_clock::now();
+
+
     PipelineStageFlags waitStage = PipelineStageFlagBits::eTopOfPipe;
 
     SubmitInfo submitInfo;
@@ -343,6 +365,14 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     queue.submit(submitInfo, renderingDoneFence);
 
     display->display(renderingDone, imageIdx);
+    auto display_e = std::chrono::high_resolution_clock::now();
+
+    cout << "display " << std::chrono::duration<double, milli>(display_e - display_s).count() << endl;
+
+
+    auto cpu_e = std::chrono::high_resolution_clock::now();
+    cout << "CPU " << std::chrono::duration<double, milli>(cpu_e - cpu_s).count() << endl;
+
     auto r1 = std::chrono::high_resolution_clock::now();
     Result result = device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
     if(result == Result::eTimeout) {
@@ -350,6 +380,9 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     }
     auto r2 = std::chrono::high_resolution_clock::now();
     cout << "GPU " << std::chrono::duration<double, milli>(r2 - r1).count() << endl;
+
+    device.freeCommandBuffers(commandPool, {commandBuffer});
+    device.freeDescriptorSets(descriptorPool, descriptorSets);
 
 }
 
