@@ -44,7 +44,7 @@ void lego::Game::init() {
     currentBrickDimensions = {4,2,3};
     brickDimensions = {4,3,2};
     modelVelocity = {0,0,0};
-    std::unique_ptr<engine::Object> transparentBrick = unique_ptr<Object> {new Object{brick, position, orientation, Vector3f{1.0f, 1.0f, 1.0f}}};
+    std::unique_ptr<engine::Object> transparentBrick = unique_ptr<Object> {new Object{brick, position, orientation, colors[colorIndex]}};
     renderingEngine.loadObject(*transparentBrick);
     scene.controllingObject = std::move(transparentBrick);
 
@@ -81,6 +81,10 @@ void lego::Game::tick(float secondsPassed) {
     int height = lego::GridUtil::snapSize(brickDimensions.y);
     int depth = lego::GridUtil::snapSize(brickDimensions.z);
 
+    currentBrickDimensions.width = width;
+    currentBrickDimensions.height = height;
+    currentBrickDimensions.depth = depth;
+
     scene.controllingObject->model = brickCache.getBrick(width,depth, height);
 }
 
@@ -111,9 +115,14 @@ void lego::Game::changeBrick() {
 
 void lego::Game::controlBrick() {
     inputManager.setMapping(*controllBrickInputMapping);
-
 }
 
 void lego::Game::setModelVelocity(OVR::Vector3f velocity) {
     this->modelVelocity = velocity;
+}
+
+void lego::Game::changeColor(int delta) {
+    int size = colors.size();
+    colorIndex = (colorIndex + delta + size) % size;
+    this->scene.controllingObject->color = colors[colorIndex];
 }

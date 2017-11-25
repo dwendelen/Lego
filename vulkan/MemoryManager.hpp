@@ -18,11 +18,6 @@ namespace engine {
 }
 
 namespace vulkan {
-    class MemoryBlock {
-    public:
-        vk::DeviceSize offset;
-        vk::DeviceSize size;
-    };
     class Memory {
     public:
         vk::DeviceMemory memory {};

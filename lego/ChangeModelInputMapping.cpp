@@ -58,11 +58,11 @@ void lego::ChangeModelInputMapping::onY() {
 }
 
 void lego::ChangeModelInputMapping::onLeftShoulder() {
-
+    game.changeColor(-1);
 }
 
 void lego::ChangeModelInputMapping::onRightShoulder() {
-
+    game.changeColor(1);
 }
 
 void lego::ChangeModelInputMapping::leftJoystickX(float value) {

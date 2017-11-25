@@ -52,6 +52,7 @@ namespace lego {
         void changeBrick();
 
         void controlBrick();
+        void changeColor(int delta);
 
     private:
         engine::Scene& scene;
@@ -70,6 +71,7 @@ namespace lego {
         OVR::Vector3f brickDimensions;
         BrickDimension currentBrickDimensions;
         OVR::Vector3f modelVelocity;
+        int colorIndex = 0;
 
         void move(OVR::Vector3f translation);
     };
