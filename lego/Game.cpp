@@ -30,15 +30,6 @@ void lego::Game::init() {
     BrickModel* brick2 = brickCache.getBrick(4, 2, 3);
 
     auto orientation = Quatf(0.0f, 0.0f, 0.0f, 1.0f);
-    //for(int i = 0; i < 250; i++) {
-    //    std::unique_ptr<engine::Object> object  = unique_ptr<Object>{new Object {brick, Vector3f{-0.032f,-0.2f,-0.2f}, orientation, Vector3f{1.0f,1.0f,1.0f}}};
-    //    renderingEngine.loadObject(*object);
-    //    scene.placedObjects.push_back(std::move(object));
-    //}
-    //std::unique_ptr<engine::Object> object2  = unique_ptr<Object>{new Object {brick2, Vector3f{0.0f,-0.2f,-0.216f}, orientation, Vector3f{1.0f,0.0f,0.0f}}};
-    //renderingEngine.loadObject(*object2);
-    //scene.placedObjects.push_back(std::move(object2));
-
     const Vector3f &position = Vector3f{0.0f, -0.2f, -0.2f};
     pseudoPosition = position;
     currentBrickDimensions = {4,2,3};
@@ -49,6 +40,10 @@ void lego::Game::init() {
     scene.controllingObject = std::move(transparentBrick);
 
     inputManager.setMapping(*controllBrickInputMapping);
+
+    for(int i = 0; i < 250; i++) {
+        placeBlock();
+    }
 }
 
 void lego::Game::setVelocity(OVR::Vector3f velocity) {

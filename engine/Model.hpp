@@ -16,6 +16,7 @@ namespace engine {
     public:
         virtual std::vector <OVR::Vector3f> getVerticesWithNormal()=0;
         virtual std::vector <Vector3ui> getIndices()=0;
+        virtual uint32_t getNbOfIndices() = 0;
 
         void * renderData;
 

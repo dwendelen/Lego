@@ -274,9 +274,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
         commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
         commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
 
-
-        uint32_t nbOfIndices = static_cast<uint32_t>(object.model->getIndices().size() * 3);
-        commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
+        commandBuffer.drawIndexed(object.model->getNbOfIndices(), 1, 0, 0, 0);
     }
     auto postloop = std::chrono::high_resolution_clock::now();
     cout << "loop: " << chrono::duration <double, milli> (postloop - preloop).count() << endl;
@@ -336,7 +334,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     cout << "display " << std::chrono::duration<double, milli>(display_e - display_s).count() << endl;
 
-    //backFrame.swap(frontFrame);
+    backFrame.swap(frontFrame);
     auto cpu_e = std::chrono::high_resolution_clock::now();
     cout << "CPU " << std::chrono::duration<double, milli>(cpu_e - cpu_s).count() << endl;
 

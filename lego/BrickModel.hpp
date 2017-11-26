@@ -28,6 +28,10 @@ namespace lego {
 
         virtual std::vector <Vector3ui> getIndices() { return indices; }
 
+        virtual uint32_t getNbOfIndices() {
+            return indices.size() * 3;
+        }
+
         virtual ~BrickModel() {
             std::cerr << "Model destroyed!" << std::endl;
         };

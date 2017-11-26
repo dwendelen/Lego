@@ -64,7 +64,7 @@ void vulkan::Display::init() {
 
     SwapchainCreateInfoKHR swapCreateInfo;
     swapCreateInfo.surface = surface;
-    swapCreateInfo.minImageCount = 2;
+    swapCreateInfo.minImageCount = 3;
     swapCreateInfo.imageFormat = Format::eB8G8R8A8Srgb;
     swapCreateInfo.imageColorSpace = ColorSpaceKHR::eSrgbNonlinear;
     swapCreateInfo.imageExtent = Extent2D{800, 600};
