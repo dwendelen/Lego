@@ -65,7 +65,7 @@ if (Vulkan_FOUND)
             vulkan/Context.cpp vulkan/Context.hpp
             vulkan/Display.cpp vulkan/Display.hpp
             vulkan/RenderPass.cpp vulkan/RenderPass.hpp
-    )
+            vulkan/Frame.hpp vulkan/Frame.cpp)
 
     include_directories(${ENGINE_INC} ${Vulkan_INCLUDE_DIR})
 

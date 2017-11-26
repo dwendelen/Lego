@@ -60,9 +60,7 @@ void vulkan::Renderer::init() {
 
     queue = device.getQueue(queueFamilyIndex, 0);
 
-    CommandPoolCreateInfo commandPoolCreateInfo;
-    commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
-    commandPool = device.createCommandPool(commandPoolCreateInfo);
+
 
     vertexShader = unique_ptr<Shader>{new Shader("shaders/vert.spv", device)};
     fragmentShader = unique_ptr<Shader>{new Shader("shaders/frag.spv", device)};
@@ -149,23 +147,16 @@ void vulkan::Renderer::init() {
         this->frameBuffers.push_back(framebuffer);
     }
 
-    frameBufferReady = device.createSemaphore({});
-    renderingDone = device.createSemaphore({});
-    renderingDoneFence = device.createFence({});
 
-    vector<DescriptorPoolSize> descriptorPoolSizes{
-            {DescriptorType::eUniformBufferDynamic, 1},
-            {DescriptorType::eUniformBuffer,        1},
-    };
 
-    DescriptorPoolCreateInfo descriptorPoolCreateInfo;
-    descriptorPoolCreateInfo.maxSets = 2;
-    descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
-    descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+    vector<DescriptorSetLayout> descriptorSetLayouts {transparentRenderPass->getSetLayout0(), transparentRenderPass->getSetLayout1()};
 
-    this->descriptorPool = device.createDescriptorPool(descriptorPoolCreateInfo);
 
-    return;
+    frontFrame = unique_ptr<Frame>(new Frame(device));
+    backFrame = unique_ptr<Frame>(new Frame(device));
+
+    frontFrame->init(queueFamilyIndex, descriptorSetLayouts);
+    backFrame->init(queueFamilyIndex, descriptorSetLayouts);
 }
 
 
@@ -183,43 +174,21 @@ void Renderer::createOpagePipeline() {
 }
 
 void vulkan::Renderer::render(engine::Scene& scene) {
+    backFrame->waitForFrameAndResetResources();
+
+
     Device device = context->getDevice();
+    CommandBuffer commandBuffer = backFrame->commandBuffer;
 
     auto image_s = std::chrono::high_resolution_clock::now();
-    uint32_t imageIdx = display->acquireNextFrameBufferId(frameBufferReady);
+    uint32_t imageIdx = display->acquireNextFrameBufferId(backFrame->frameBufferAvailable);
     auto image_e = std::chrono::high_resolution_clock::now();
 
     cout << "image: " << chrono::duration <double, milli> (image_e - image_s).count() << endl;
 
 
     auto cpu_s = std::chrono::high_resolution_clock::now();
-    auto alloc_s = std::chrono::high_resolution_clock::now();
-
-    device.resetCommandPool(commandPool, {});
-    device.resetDescriptorPool(descriptorPool);
-
-    CommandBufferAllocateInfo commandBufferInfo;
-    commandBufferInfo.commandPool = commandPool;
-    commandBufferInfo.commandBufferCount = 1;
-    commandBufferInfo.level = CommandBufferLevel::ePrimary;
-
-    CommandBuffer commandBuffer = device.allocateCommandBuffers(commandBufferInfo)[0];
-
-    vector<DescriptorSetLayout> descriptorSetLayouts {transparentRenderPass->getSetLayout0(), transparentRenderPass->getSetLayout1()};
-
-    DescriptorSetAllocateInfo descriptorSetAllocateInfo;
-    descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-    descriptorSetAllocateInfo.descriptorSetCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-    descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
-
-    vector<DescriptorSet> descriptorSets = device.allocateDescriptorSets(descriptorSetAllocateInfo);
-
-    auto alloc_e = std::chrono::high_resolution_clock::now();
-    cout << "alloc " << std::chrono::duration<double, milli>(alloc_e - alloc_s).count() << endl;
-
-
     auto renderPass_s = std::chrono::high_resolution_clock::now();
-
 
     CommandBufferBeginInfo commandBufferBeginInfo;
     commandBufferBeginInfo.flags = CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -231,7 +200,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     bufferInfo0.range = VK_WHOLE_SIZE;
 
     WriteDescriptorSet writeDescriptor00;
-    writeDescriptor00.dstSet = descriptorSets[0];
+    writeDescriptor00.dstSet = backFrame->descriptorSets[0];
     writeDescriptor00.dstBinding = 0;
     writeDescriptor00.dstArrayElement = 0;
     writeDescriptor00.descriptorCount = 1;
@@ -245,7 +214,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     bufferInfo1.range = VK_WHOLE_SIZE;
 
     WriteDescriptorSet writeDescriptor10;
-    writeDescriptor10.dstSet = descriptorSets[1];
+    writeDescriptor10.dstSet = backFrame->descriptorSets[1];
     writeDescriptor10.dstBinding = 0;
     writeDescriptor10.dstArrayElement = 0;
     writeDescriptor10.descriptorCount = 1;
@@ -283,7 +252,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     commandBuffer.beginRenderPass(renderPassBeginInfo, SubpassContents::eInline);
     commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 1,
-                                     {descriptorSets[1]}, {});
+                                     {backFrame->descriptorSets[1]}, {});
 
     Buffer modelBuffer = memoryManager->modelMemory.buffer;
 
@@ -301,7 +270,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
         DeviceSize offsetUniform = objectData->dataOffset;
 
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
-                                         {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
+                                         {backFrame->descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
         commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
         commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
 
@@ -329,7 +298,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     uint32_t nbOfIndices = static_cast<uint32_t>(object.model->getIndices().size() * 3);
 
     commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
-                                     {descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
+                                     {backFrame->descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
     commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
     commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
     commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
@@ -355,34 +324,22 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &frameBufferReady;
+    submitInfo.pWaitSemaphores = &backFrame->frameBufferAvailable;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &renderingDone;
+    submitInfo.pSignalSemaphores = &backFrame->renderingDone;
     submitInfo.pWaitDstStageMask = &waitStage;
 
+    queue.submit(submitInfo, backFrame->frameAvailable);
 
-    device.resetFences(renderingDoneFence);
-    queue.submit(submitInfo, renderingDoneFence);
-
-    display->display(renderingDone, imageIdx);
+    display->display(backFrame->renderingDone, imageIdx);
     auto display_e = std::chrono::high_resolution_clock::now();
 
     cout << "display " << std::chrono::duration<double, milli>(display_e - display_s).count() << endl;
 
-
+    //backFrame.swap(frontFrame);
     auto cpu_e = std::chrono::high_resolution_clock::now();
     cout << "CPU " << std::chrono::duration<double, milli>(cpu_e - cpu_s).count() << endl;
 
-    auto r1 = std::chrono::high_resolution_clock::now();
-    Result result = device.waitForFences({renderingDoneFence}, VK_TRUE, 10000000000);
-    if(result == Result::eTimeout) {
-        throw runtime_error("Device blocked");
-    }
-    auto r2 = std::chrono::high_resolution_clock::now();
-    cout << "GPU " << std::chrono::duration<double, milli>(r2 - r1).count() << endl;
-
-    device.freeCommandBuffers(commandPool, {commandBuffer});
-    device.freeDescriptorSets(descriptorPool, descriptorSets);
 
 }
 
@@ -407,27 +364,12 @@ vulkan::Renderer::~Renderer() {
         device.destroyImage(depthBuffer);
     }
 
-    if (descriptorPool) {
-        device.destroyDescriptorPool(descriptorPool);
-    }
+    frontFrame.reset();
+    backFrame.reset();
 
     transparentRenderPass.reset();
     vertexShader.reset();
     fragmentShader.reset();
-
-    if (commandPool) {
-        device.destroyCommandPool(commandPool);
-    }
-
-    if(renderingDone) {
-        device.destroySemaphore(renderingDone);
-    }
-    if(frameBufferReady) {
-        device.destroySemaphore(frameBufferReady);
-    }
-    if(renderingDoneFence) {
-        device.destroyFence(renderingDoneFence);
-    }
 
     display.reset();
     memoryManager.reset();

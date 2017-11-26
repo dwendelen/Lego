@@ -13,6 +13,7 @@
 #include "Display.hpp"
 #include "RenderPass.hpp"
 #include "MemoryManager.hpp"
+#include "Frame.hpp"
 
 namespace vulkan {
     class ModelData;
@@ -25,23 +26,20 @@ namespace vulkan {
         std::unique_ptr<Context> context;
         std::unique_ptr<Display> display;
         vk::Queue queue;
-        vk::CommandPool commandPool;
 
         std::unique_ptr<Shader> vertexShader;
         std::unique_ptr<Shader> fragmentShader;
         std::unique_ptr<RenderPass> transparentRenderPass;
         std::unique_ptr<MemoryManager> memoryManager;
 
-        vk::DescriptorPool descriptorPool;
 
         std::vector<vk::Framebuffer> frameBuffers;
         std::vector<vk::ImageView> imageViews;
         vk::ImageView depthView;
         vk::Image depthBuffer;
 
-        vk::Semaphore frameBufferReady;
-        vk::Semaphore renderingDone;
-        vk::Fence renderingDoneFence;
+        std::unique_ptr<Frame> frontFrame;
+        std::unique_ptr<Frame> backFrame;
     public:
         Renderer(bool debug)
                 : debug(debug)
@@ -53,8 +51,6 @@ namespace vulkan {
         virtual ~Renderer();
 
         void createOpagePipeline();
-
-
     };
 }
 

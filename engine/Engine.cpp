@@ -30,6 +30,9 @@ void engine::Engine::init() {
 }
 
 void engine::Engine::run() {
+    auto game_s = std::chrono::high_resolution_clock::now();
+    uint64_t nbOfFrames = 0;
+
     while(game.isRunning()) {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -51,5 +54,10 @@ void engine::Engine::run() {
         cout << "physics  " << std::chrono::duration<double, milli>(fysics - input).count() << endl;
         cout << "renderin " << std::chrono::duration<double, milli>(render - fysics).count() << endl;
         cout << "FPS 2    " << 1000.0/std::chrono::duration<double, milli>(render - start).count() << endl;
+        nbOfFrames++;
     }
+
+    auto game_e = std::chrono::high_resolution_clock::now();
+    cout << "Average FPS " << 1000 * nbOfFrames/std::chrono::duration<double, milli>(game_e - game_s).count() << endl;
+
 }
