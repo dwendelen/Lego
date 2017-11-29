@@ -13,6 +13,7 @@
 #ifdef __LINUX__
 
 #include <chrono>
+#include <SDL_timer.h>
 
 #endif
 
@@ -327,6 +328,7 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     submitInfo.pSignalSemaphores = &backFrame->renderingDone;
     submitInfo.pWaitDstStageMask = &waitStage;
 
+    //SDL_Delay(1); Simulate CPU intensive operations
     queue.submit(submitInfo, backFrame->frameAvailable);
 
     display->display(backFrame->renderingDone, imageIdx);
