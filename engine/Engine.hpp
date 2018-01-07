@@ -5,33 +5,27 @@
 #ifndef LEGO_ENGINE_HPP
 #define LEGO_ENGINE_HPP
 
+#include "game_engine.hpp"
 #include <memory>
 
 namespace lego {
-    class Game;
+    class LegoGame;
 }
 
 namespace engine {
-    class RenderingEngine;
-    class InputManager;
-    class Scene;
-
     class Engine {
     private:
         RenderingEngine& renderingEngine;
         InputManager& inputManager;
-        Scene& scene;
-        lego::Game& game;
+        Game& game;
         uint32_t lastTick;
     public:
         Engine(RenderingEngine &renderingEngine,
                InputManager &inputManager,
-               Scene &scene,
-               lego::Game &game
+               Game &game
         )
                 : renderingEngine(renderingEngine),
                   inputManager(inputManager),
-                  scene(scene),
                   game(game)
         {}
 

@@ -5,18 +5,27 @@
 #ifndef LEGO_CONSOLERENDERER_HPP
 #define LEGO_CONSOLERENDERER_HPP
 
+#include "../engine/game_engine.hpp"
 #include "../engine/RenderingEngine.hpp"
 
 namespace console {
     class ConsoleRenderer : public engine::RenderingEngine {
+    private:
+        engine::EventBus& eventBus;
+        engine::Object nextObject = 0;
     public:
+        explicit ConsoleRenderer(engine::EventBus &eventBus)
+                : eventBus(eventBus) {}
+
         void init() override;
 
-        void render(engine::Scene &scene) override;
+        void render() override;
 
-        void loadModel(engine::Model &model) override;
+        engine::Object newObject() override {
+            return nextObject++;
+        }
 
-        void loadObject(engine::Object &object) override;
+        void loadModel(engine::ModelData &model) override;
     };
 }
 

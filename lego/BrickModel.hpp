@@ -9,7 +9,7 @@
 #include "../engine/Model.hpp"
 
 namespace lego {
-    class BrickModel : public engine::Model {
+    class BrickModel : public engine::ModelData {
         int nbOfStubsX;
         int nbOfStubsZ;
         int height;

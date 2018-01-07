@@ -1,14 +1,14 @@
 #include <iostream>
-#include "engine/Scene.hpp"
 #include "engine/Camera.hpp"
 #include "vulkan/ModelData.hpp"
 #include "vulkan/Renderer.hpp"
-#include "vulkan/MemoryManager.hpp"
 #include "lego/BrickModel.hpp"
 #include "lego/TriangleModel.hpp"
 #include "engine/Engine.hpp"
 #include "engine/InputManager.hpp"
-#include "lego/Game.hpp"
+#include "engine/EventBus.hpp"
+#include "lua/LuaGame.hpp"
+#include "lego/BrickCache.hpp"
 
 using namespace engine;
 using namespace vulkan;
@@ -21,12 +21,13 @@ int main() {
 #else
     bool debug = false;
 #endif
-    Scene scene;
     InputManager inputManager;
-    Renderer renderer{debug};
-    lego::Game game {scene, renderer, inputManager};
-
-    engine::Engine engine {renderer, inputManager, scene, game};
+    EventBus eventBus;
+    Renderer renderer{debug, eventBus};
+    lego::BrickCache brickCache {renderer};
+    lua::ScriptEngine scriptEngine{eventBus, brickCache, renderer };
+    lua::LuaGame game {renderer, inputManager, scriptEngine };
+    engine::Engine engine {renderer, inputManager, game};
     engine.init();
     engine.run();
 }

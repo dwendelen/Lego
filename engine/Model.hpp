@@ -11,7 +11,7 @@
 typedef OVR::Vector3<uint32_t> Vector3ui;
 
 namespace engine {
-    class Model {
+    class ModelData {
 
     public:
         virtual std::vector <OVR::Vector3f> getVerticesWithNormal()=0;
@@ -20,7 +20,7 @@ namespace engine {
 
         void * renderData;
 
-        virtual ~Model() = default;
+        virtual ~ModelData() = default;
     };
 }
 

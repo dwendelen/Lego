@@ -8,7 +8,7 @@
 #include "../engine/Model.hpp"
 
 namespace lego {
-    class TriangleModel : public engine::Model {
+    class TriangleModel : public engine::ModelData {
     public:
         virtual std::vector <OVR::Vector3f> getVerticesWithNormal() {
             return std::vector<OVR::Vector3f> {

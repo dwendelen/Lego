@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLEGO_DEBUG")
 
 find_package(SDL2 REQUIRED)
 find_package(Vulkan QUIET)
+find_package(Lua REQUIRED)
 
 set(ENGINE_SRC
         engine/Math.hpp
@@ -16,20 +17,43 @@ set(ENGINE_SRC
         engine/RenderingEngine.hpp
         engine/Model.hpp
         engine/Object.hpp
-        engine/Scene.cpp engine/Scene.hpp
         engine/Camera.cpp engine/Camera.hpp
         engine/InputManager.cpp engine/InputManager.hpp
         engine/InputMapping.hpp
+        engine/EventBus.cpp engine/EventBus.hpp
+
+        engine/Game.hpp
+        engine/Input.hpp
+        engine/InputGeneratingInputMapping.cpp engine/InputGeneratingInputMapping.hpp
+
+        lua/LuaGame.cpp lua/LuaGame.hpp
+        lua/ScriptEngine.cpp lua/ScriptEngine.hpp
+        engine/game_engine.hpp)
+set(ENGINE_LIBS
+        ${SDL2_LIBRARY}
+        ${LUA_LIBRARIES}
 )
-set(ENGINE_LIBS ${SDL2_LIBRARY})
-set(ENGINE_INC ${SDL2_INCLUDE_DIR} lib/OVR)
+set(ENGINE_INC
+        ${SDL2_INCLUDE_DIR}
+        lib/OVR
+        ${LUA_INCLUDE_DIR}
+)
+
+include_directories(${ENGINE_INC})
 
 set(LEGO_SRC
         lego/BrickModel.cpp lego/BrickModel.hpp
         lego/TriangleModel.hpp
-        lego/Game.cpp lego/Game.hpp
-        lego/ControlBrickInputMapping.cpp lego/ControlBrickInputMapping.hpp
-        lego/BrickCache.cpp lego/BrickCache.hpp lego/ChangeModelInputMapping.cpp lego/ChangeModelInputMapping.hpp lego/ControlBrick.cpp lego/ControlBrick.hpp lego/GridUtil.hpp)
+        lego/BrickCache.cpp lego/BrickCache.hpp
+        lego/GridUtil.hpp)
+
+add_custom_target(Scripts)
+add_custom_command(
+        TARGET Scripts POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+        ${CMAKE_CURRENT_BINARY_DIR}/scripts
+)
 
 if (Vulkan_FOUND)
     find_package(X11_XCB REQUIRED)
@@ -58,16 +82,15 @@ if (Vulkan_FOUND)
     set(VULKAN_SRC
             vulkan/vulkanExt.hpp vulkan/vulkanExt.cpp
             vulkan/ModelData.hpp
-            vulkan/ObjectData.hpp
             vulkan/Renderer.cpp vulkan/Renderer.hpp
             vulkan/MemoryManager.cpp vulkan/MemoryManager.hpp
             vulkan/Shader.cpp vulkan/Shader.hpp
             vulkan/Context.cpp vulkan/Context.hpp
             vulkan/Display.cpp vulkan/Display.hpp
             vulkan/RenderPass.cpp vulkan/RenderPass.hpp
-            vulkan/Frame.hpp vulkan/Frame.cpp)
+            vulkan/Frame.hpp vulkan/Frame.cpp engine/Events.hpp vulkan/vulkanRenderer.hpp)
 
-    include_directories(${ENGINE_INC} ${Vulkan_INCLUDE_DIR})
+    include_directories(${Vulkan_INCLUDE_DIR})
 
     add_executable(LegoV
             ${ENGINE_SRC}
@@ -77,14 +100,12 @@ if (Vulkan_FOUND)
     )
 
     target_link_libraries(LegoV ${ENGINE_LIBS} ${Vulkan_LIBRARIES} ${X11_XCB_LIBRARIES})
-    add_dependencies(LegoV Shaders)
+    add_dependencies(LegoV Shaders Scripts)
 
 
 else (Vulkan_FOUND)
     message("No Vulkan")
 endif (Vulkan_FOUND)
-
-include_directories(${ENGINE_INC})
 
 add_executable(LegoC
         ${ENGINE_SRC}
@@ -93,3 +114,20 @@ add_executable(LegoC
         mainConsole.cpp
 )
 target_link_libraries(LegoC ${ENGINE_LIBS})
+add_dependencies(LegoC Scripts)
+
+find_package(GTest REQUIRED)
+if(GTEST_FOUND)
+    message("Found googletest")
+
+    add_executable(EventBusTest
+            engine/EventBusTest.cpp
+            engine/EventBus.cpp engine/EventBus.hpp
+    )
+    target_link_libraries(EventBusTest
+            ${GTEST_BOTH_LIBRARIES}
+            ${SDL2_LIBRARY}
+    )
+else(GTEST_FOUND)
+    message("No gtest found")
+endif(GTEST_FOUND)

@@ -11,8 +11,7 @@
 #include <chrono>
 #include "RenderingEngine.hpp"
 #include "InputManager.hpp"
-#include "Scene.hpp"
-#include "../lego/Game.hpp"
+#include "Game.hpp"
 
 using namespace std;
 
@@ -23,7 +22,6 @@ void engine::Engine::init() {
 
     renderingEngine.init();
     inputManager.init();
-    scene.init();
     game.init();
 
     lastTick = SDL_GetTicks();
@@ -46,7 +44,7 @@ void engine::Engine::run() {
         auto input = std::chrono::high_resolution_clock::now();
         game.tick(secondsPassed);
         auto fysics = std::chrono::high_resolution_clock::now();
-        renderingEngine.render(scene);
+        renderingEngine.render();
         auto render = std::chrono::high_resolution_clock::now();
 
         cout << "calc FPS " << std::chrono::duration<double, milli>(ticks - start).count() << endl;

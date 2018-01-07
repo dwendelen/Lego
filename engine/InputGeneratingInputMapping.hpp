@@ -1,45 +1,56 @@
 //
-// Created by xtrit on 22/11/17.
+// Created by xtrit on 06.01.18.
 //
 
-#ifndef LEGO_CHANGEMODELINPUTMAPPING_HPP
-#define LEGO_CHANGEMODELINPUTMAPPING_HPP
+#ifndef LEGO_INPUTGENERATINGINPUTMAPPING_HPP
+#define LEGO_INPUTGENERATINGINPUTMAPPING_HPP
 
-#include "../engine/InputMapping.hpp"
 
-namespace lego {
-    class Game;
-    class ChangeModelInputMapping: public engine::InputMapping {
-    private:
-        Game& game;
-        float x;
-        float y;
-        float z;
+#include "InputMapping.hpp"
+#include "Input.hpp"
+
+namespace engine {
+    class InputGeneratingInputMapping : public InputMapping {
     public:
-        explicit ChangeModelInputMapping(Game &game) : game(game) {}
+        Input input;
+        bool quit = false;
 
         void preInput() override;
+
         void postInput() override;
+
         void onQuit() override;
 
         void onUp() override;
+
         void onDown() override;
+
         void onLeft() override;
+
         void onRight() override;
 
         void onStartButton() override;
+
         void onA() override;
+
         void onB() override;
+
         void onX() override;
+
         void onY() override;
+
         void onLeftShoulder() override;
+
         void onRightShoulder() override;
 
         void leftJoystickX(float value) override;
+
         void leftJoystickY(float value) override;
+
         void leftTrigger(float value) override;
+
         void rightTrigger(float value) override;
     };
 }
 
-#endif //LEGO_CHANGEMODELINPUTMAPPING_HPP
+#endif //LEGO_INPUTGENERATINGINPUTMAPPING_HPP

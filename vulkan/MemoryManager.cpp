@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "MemoryManager.hpp"
+#include "ModelData.hpp"
 #include "../engine/Object.hpp"
 #include "../engine/Model.hpp"
 #include "../engine/Camera.hpp"
@@ -97,9 +98,11 @@ void vulkan::MemoryManager::init() {
 
     DeviceSize modelBufferSize = 256 * 1024 * 1024;
     DeviceSize objectBufferSize = physicalDevice.getProperties().limits.maxUniformBufferRange;
-    DeviceSize pvBufferSize = max(physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment, sizeof(Matrix4f));
+    DeviceSize pvBufferSize = max(physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment, sizeof(Matrix4f)); //TODO Looks wrong
 
-
+    sizeObjectUniform = align(sizeof(UniformData), physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
+    maxNbOfObjects = objectBufferSize / sizeObjectUniform;
+    
     this->modelMemory = createMemory(modelBufferUsage | BufferUsageFlagBits::eTransferDst, modelBufferSize, deviceRequirements);
     this->modelStagingMemory = createMemory(modelBufferUsage | BufferUsageFlagBits::eTransferSrc, modelBufferSize, hostRequirements);
     this->objectMemory = createMemory(objectBufferUsage, objectBufferSize, hostRequirements);
@@ -171,7 +174,7 @@ void vulkan::MemoryManager::allocateStatic(vector<Image> images) {
     }
 }
 
-void vulkan::MemoryManager::loadModel(engine::Model& model) {
+void vulkan::MemoryManager::loadModel(engine::ModelData& model) {
     DeviceSize sizeVertices = model.getVerticesWithNormal().size() * sizeof(OVR::Vector3f);
     DeviceSize sizeIndices = model.getIndices().size() * sizeof(Vector3ui);
 
@@ -205,58 +208,23 @@ void vulkan::MemoryManager::loadCamera(engine::Camera& camera) {
 
 }
 
-
-void vulkan::MemoryManager::loadObject(engine::Object& object) {
-    Matrix4<float> orientation = Matrix4f(object.orientation);
-    Matrix4f model = Matrix4f::Translation(object.position) * orientation;
-
-    UniformData data = {
-        model.Transposed(),
-        orientation.Transposed(),
-        Vector4f(object.color, 1.0f)
-    };
-
-    DeviceSize sizeData = sizeof(data);
-    DeviceSize alignedSize = align(sizeData, physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
-
-    DeviceSize newUsed = objectMemory.used + alignedSize;
-
-    if(newUsed > objectMemory.size) {
-        throw runtime_error("Not enough object memory");
-    }
-
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory.memory, objectMemory.used, alignedSize));
-    memcpy(writeLocation, &data, sizeData);
-    device.unmapMemory(objectMemory.memory);
-
-    ObjectData* objectData = new ObjectData{};
-    objectData->dataOffset = objectMemory.used;
-    object.renderData = objectData;
-
-    objectMemory.used = newUsed;
-}
-
-void vulkan::MemoryManager::updateControllingObject(engine::Object &controllingObject) {
-    ObjectData* objectData = static_cast<ObjectData *>(controllingObject.renderData);
-
-    Matrix4<float> orientation = Matrix4f(controllingObject.orientation);
-    Matrix4f model = Matrix4f::Translation(controllingObject.position) * orientation;
+void vulkan::MemoryManager::updateObject(engine::Object object, engine::ObjectData& objectData) {
+    Matrix4<float> orientation = Matrix4f(objectData.orientation);
+    Matrix4f model = Matrix4f::Translation(objectData.position) * orientation;
 
     UniformData data = {
             model.Transposed(),
             orientation.Transposed(),
-            Vector4f(controllingObject.color, 0.5f)
+            objectData.color
     };
 
     DeviceSize sizeData = sizeof(data);
     DeviceSize alignedSize = align(sizeData, physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
 
-
-    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory.memory, objectData->dataOffset, alignedSize));
+    uint8_t* writeLocation = static_cast<uint8_t *>(device.mapMemory(objectMemory.memory, object * alignedSize, alignedSize));
     memcpy(writeLocation, &data, sizeData);
     device.unmapMemory(objectMemory.memory);
 }
-
 
 void vulkan::MemoryManager::copyMemory(vk::CommandBuffer &commandBuffer) {
     DeviceSize offset = modelMemory.used;

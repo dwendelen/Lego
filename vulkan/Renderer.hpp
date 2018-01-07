@@ -6,8 +6,10 @@
 #define LEGO_VULKANRENDERER_HPP
 
 #include "vulkanExt.hpp"
-#include "../engine/RenderingEngine.hpp"
+#include "vulkanRenderer.hpp"
 
+#include "../engine/game_engine.hpp"
+#include "../engine/RenderingEngine.hpp"
 #include "Context.hpp"
 #include "Shader.hpp"
 #include "Display.hpp"
@@ -16,12 +18,11 @@
 #include "Frame.hpp"
 
 namespace vulkan {
-    class ModelData;
-    class ObjectData;
 
     class Renderer : public engine::RenderingEngine {
     private:
         bool debug;
+        engine::EventBus& eventBus;
 
         std::unique_ptr<Context> context;
         std::unique_ptr<Display> display;
@@ -40,14 +41,19 @@ namespace vulkan {
 
         std::unique_ptr<Frame> frontFrame;
         std::unique_ptr<Frame> backFrame;
+
+        engine::Object nextObject = 0;
+        std::vector<engine::ModelData*> models{1024};
+        std::vector<engine::Object> objects;
     public:
-        Renderer(bool debug)
+        Renderer(bool debug, engine::EventBus& eventBus)
                 : debug(debug)
+                , eventBus(eventBus)
                 {}
         void init() override;
-        void render(engine::Scene& scene) override;
-        void loadModel(engine::Model& model) override;
-        void loadObject(engine::Object& object) override;
+        void render() override;
+        engine::Object newObject() override;
+        void loadModel(engine::ModelData& model) override;
         virtual ~Renderer();
 
         void createOpagePipeline();

@@ -6,7 +6,7 @@
 #define LEGO_CAMERA_HPP
 
 
-#include "Extras/OVR_Math.h"
+#include "Math.hpp"
 
 namespace engine {
     class Camera {

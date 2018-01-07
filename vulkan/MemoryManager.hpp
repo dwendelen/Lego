@@ -6,16 +6,10 @@
 #define LEGO_MEMORYMANAGER_HPP
 
 #include "vulkanExt.hpp"
+#include "vulkanRenderer.hpp"
+
 #include "../engine/Math.hpp"
-
-#include "ModelData.hpp"
-#include "ObjectData.hpp"
-
-namespace engine {
-    class Model;
-    class Object;
-    class Camera;
-}
+#include "../engine/game_engine.hpp"
 
 namespace vulkan {
     class Memory {
@@ -43,6 +37,9 @@ namespace vulkan {
         Memory objectMemory;
         Memory pvMemory;
 
+        vk::DeviceSize sizeObjectUniform;
+        vk::DeviceSize maxNbOfObjects;
+
         MemoryManager(vk::Device device, vk::PhysicalDevice physicalDevice)
                 : device(device)
                 , physicalDevice(physicalDevice)
@@ -52,11 +49,9 @@ namespace vulkan {
 
         void allocateStatic(std::vector<vk::Image> images);
 
-        void loadModel(engine::Model& model);
+        void loadModel(engine::ModelData& model);
 
-        void loadObject(engine::Object& object);
-
-        void updateControllingObject(engine::Object& controllingObject);
+        void updateObject(engine::Object object, engine::ObjectData& objectData);
 
         void loadCamera(engine::Camera& camera);
 

@@ -5,17 +5,15 @@
 #ifndef LEGO_RENDERINGENGINE_HPP
 #define LEGO_RENDERINGENGINE_HPP
 
-namespace engine {
-    class Scene;
-    class Model;
-    class Object;
+#include "game_engine.hpp"
 
+namespace engine {
     class RenderingEngine {
     public:
         virtual void init() = 0;
-        virtual void render(Scene& scene) = 0;
-        virtual void loadModel(engine::Model& model) = 0;
-        virtual void loadObject(engine::Object& object) = 0;
+        virtual void render() = 0;
+        virtual Object newObject() = 0;
+        virtual void loadModel(engine::ModelData& model) = 0;
     };
 }
 #endif //LEGO_RENDERINGENGINE_HPP_HPP

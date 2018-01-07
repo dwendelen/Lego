@@ -5,15 +5,12 @@
 #ifndef LEGO_BRICKCACHE_HPP
 #define LEGO_BRICKCACHE_HPP
 
+#include "../engine/game_engine.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
 #include <memory>
-
-namespace engine {
-    class RenderingEngine;
-}
 
 namespace lego {
     class BrickModel;

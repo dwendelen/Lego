@@ -5,16 +5,17 @@
 #ifndef LEGO_OBJECT_HPP
 #define LEGO_OBJECT_HPP
 
+#include "game_engine.hpp"
 #include "Math.hpp"
 
+
 namespace engine {
-    class Model;
-    class Object {
+    class ObjectData {
     public:
-        Object(   Model* model
+        ObjectData(   ModelData* model
                 , OVR::Vector3f position
                 , OVR::Quatf orientation
-                , OVR::Vector3f color
+                , OVR::Vector4f color
         )
                 : model(model)
                 , position(position)
@@ -24,10 +25,9 @@ namespace engine {
 
         OVR::Vector3f position;
         OVR::Quatf orientation;
-        OVR::Vector3f color;
+        OVR::Vector4f color;
 
-        void* renderData = nullptr;
-        Model* model;
+        ModelData* model;
     };
 }
 

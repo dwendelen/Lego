@@ -3,9 +3,12 @@
 //
 
 #include "Renderer.hpp"
-#include "../engine/Scene.hpp"
+#include "ModelData.hpp"
+
 #include "../engine/Model.hpp"
 #include "../engine/Object.hpp"
+#include "../engine/Events.hpp"
+#include "../engine/EventBus.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -174,9 +177,43 @@ void Renderer::createOpagePipeline() {
     transparentRenderPass->init();
 }
 
-void vulkan::Renderer::render(engine::Scene& scene) {
+void vulkan::Renderer::render() {
     backFrame->waitForFrameAndResetResources();
-
+    
+    bool readmore = true;
+    while(readmore) {
+        engine::EventType *eventType = eventBus.peak<engine::EventType>();
+        switch (*eventType) {
+            case engine::NEW_OBJECT: {
+                auto event = eventBus.readNext<engine::NewObjectEvent>();
+                objects.push_back(event->object);
+                models[event->object] = event->model;
+                engine::ObjectData objectData{nullptr, event->position, event->orientation, event->color};
+                memoryManager->updateObject(event->object, objectData);
+                break;
+            }
+            case engine::UPDATE_OBJECT: {
+                auto event = eventBus.readNext<engine::UpdateObjectEvent>();
+                engine::ObjectData objectData{nullptr, event->position, event->orientation, event->color};
+                memoryManager->updateObject(event->object, objectData);
+                break;
+            }
+            case engine::CHANGE_MODEL: {
+                auto event = eventBus.readNext<engine::ChangeModelEvent>();
+                models[event->object] = event->model;
+                break;
+            }
+            case engine::COMMIT: {
+                eventBus.readNext<engine::CommitEvent>();
+                eventBus.commitReads();
+                readmore = false;
+                break;
+            }
+            default:
+                throw runtime_error("Unkown event " + to_string(*eventType));
+        }
+    }
+    
 
     Device device = context->getDevice();
     CommandBuffer commandBuffer = backFrame->commandBuffer;
@@ -261,32 +298,31 @@ void vulkan::Renderer::render(engine::Scene& scene) {
 
     //TODO fix access to objects
     auto preloop = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < scene.placedObjects.size(); i++) {
-        auto object = *scene.placedObjects[i];
-        ModelData* modelData = static_cast<ModelData *>(object.model->renderData);
-        ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
+    for(engine::Object object: objects) {
+        engine::ModelData *model = models[object];
+        ModelData* modelData = static_cast<ModelData*> (model->renderData);
 
         DeviceSize offsetIndices = modelData->indexOffset;
         DeviceSize offsetVertices = modelData->vertexOffset;
-        DeviceSize offsetUniform = objectData->dataOffset;
+        DeviceSize offsetUniform = object * memoryManager->sizeObjectUniform;
 
         commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics, transparentRenderPass->getPipelineLayout(), 0,
                                          {backFrame->descriptorSets[0]}, {static_cast<uint32_t>(offsetUniform)});
         commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
         commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
 
-        commandBuffer.drawIndexed(object.model->getNbOfIndices(), 1, 0, 0, 0);
+        commandBuffer.drawIndexed(model->getNbOfIndices(), 1, 0, 0, 0);
     }
     auto postloop = std::chrono::high_resolution_clock::now();
     cout << "loop: " << chrono::duration <double, milli> (postloop - preloop).count() << endl;
 
 
-    memoryManager->updateControllingObject(*scene.controllingObject);
+    //memoryManager->updateControllingObject(*scene.controllingObject);
 
     commandBuffer.nextSubpass(SubpassContents::eInline);
     commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline1());
 
-    auto object = *scene.controllingObject;
+    /*auto object = *scene.controllingObject;
     ModelData* modelData = static_cast<ModelData *>(object.model->renderData);
     ObjectData* objectData = static_cast<ObjectData*>(object.renderData);
 
@@ -301,10 +337,10 @@ void vulkan::Renderer::render(engine::Scene& scene) {
     commandBuffer.bindVertexBuffers(0, 1, &modelBuffer, &offsetVertices);
     commandBuffer.bindIndexBuffer(modelBuffer, offsetIndices, IndexType::eUint32);
     commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
-
+*/
     commandBuffer.nextSubpass(SubpassContents::eInline);
-    commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline2());
-    commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
+    //commandBuffer.bindPipeline(PipelineBindPoint::eGraphics, transparentRenderPass->getPipeline2());
+    //commandBuffer.drawIndexed(nbOfIndices, 1, 0, 0, 0);
 
 
     commandBuffer.endRenderPass();
@@ -376,12 +412,16 @@ vulkan::Renderer::~Renderer() {
     context.reset();
 }
 
-void Renderer::loadModel(engine::Model& model) {
+void Renderer::loadModel(engine::ModelData& model) {
     memoryManager->loadModel(model);
 }
 
-void Renderer::loadObject(engine::Object &object) {
-    memoryManager->loadObject(object);
+engine::Object Renderer::newObject() {
+    if(nextObject == memoryManager->maxNbOfObjects) {
+        throw runtime_error("Max number of objects reached");
+    }
+
+    return nextObject++;
 }
 
 
