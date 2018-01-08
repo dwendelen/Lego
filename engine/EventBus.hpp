@@ -9,7 +9,7 @@
 
 namespace engine {
     typedef struct {
-        char data[256];
+        char data[64];
     } Block;
 
     class EventBus {
